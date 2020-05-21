@@ -410,12 +410,17 @@ namespace ACE.Server.WorldObjects
             if (!(this is Player))
                 return 0.0f;
 
-            var scalar = PropertyManager.GetDouble("ignore_magic_armor_pvp_scalar").Item;
+            var scalar = PropertyManager.GetDouble("ignore_magic_resist_pvp_scalar").Item;
+            var lottoscalar = PropertyManager.GetDouble("lotto_hollow_scaler").Item;
 
-            if (scalar != 1.0)
+            var weapon = GetEquippedMeleeWeapon();
+
+            if (weapon != null && weapon.NumTimesTinkered >= 1 && lottoscalar != 1.0)
+                return (float)(enchantments * (1.0 - lottoscalar));
+            else if (scalar != 1.0)
                 return (float)(enchantments * (1.0 - scalar));
             else
-                return 0.0f;
+                return 0.0f;           
         }
 
         public int IgnoreMagicResistScaled(int enchantments)
@@ -424,9 +429,14 @@ namespace ACE.Server.WorldObjects
                 return 0;
 
             var scalar = PropertyManager.GetDouble("ignore_magic_resist_pvp_scalar").Item;
+            var lottoscalar = PropertyManager.GetDouble("lotto_hollow_scaler").Item;
 
-            if (scalar != 1.0)
-                return (int)Math.Round(enchantments * (1.0 - scalar));
+            var weapon = GetEquippedMeleeWeapon();
+
+            if (weapon != null && weapon.NumTimesTinkered >= 1 && lottoscalar != 1.0)
+                return (int)Math.Round(enchantments * (1.0 - lottoscalar));
+            else if (scalar != 1.0)
+                return (int)Math.Round(enchantments * (1.0 - scalar));           
             else
                 return 0;
         }

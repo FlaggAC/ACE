@@ -76,6 +76,7 @@ namespace ACE.Server.Entity
         public float RecklessnessMod;
         public float SneakAttackMod;
         public float HeritageMod;
+        public float PkDamageRating;
 
         public float DamageRatingMod;
 
@@ -92,6 +93,7 @@ namespace ACE.Server.Entity
         public float WeaponResistanceMod;
 
         public float DamageResistanceRatingMod;
+        public float PkDamageResistanceMod;
 
         public float DamageMitigated;
 
@@ -211,8 +213,9 @@ namespace ACE.Server.Entity
             RecklessnessMod = Creature.GetRecklessnessMod(attacker, defender);
             SneakAttackMod = attacker.GetSneakAttackMod(defender);
             HeritageMod = attacker.GetHeritageBonus(Weapon) ? 1.05f : 1.0f;
-
-            DamageRatingMod = Creature.AdditiveCombine(DamageRatingBaseMod, RecklessnessMod, SneakAttackMod, HeritageMod);
+            PkDamageRating = attacker.GetPKDamageRating();
+           
+            DamageRatingMod = Creature.AdditiveCombine(DamageRatingBaseMod, RecklessnessMod, SneakAttackMod, HeritageMod);            
 
             // damage before mitigation
             DamageBeforeMitigation = BaseDamage * AttributeMod * PowerMod * SlayerMod * DamageRatingMod;
@@ -297,16 +300,27 @@ namespace ACE.Server.Entity
                 ResistanceMod = (float)Math.Max(0.0f, defender.GetResistanceMod(resistanceType, Attacker, Weapon, WeaponResistanceMod));
             }
 
-            // damage resistance rating
+            // damage resistance rating                       
             DamageResistanceRatingMod = Creature.GetNegativeRatingMod(defender.GetDamageResistRating(CombatType));
+
+
+            // pk damage reduction
+            PkDamageResistanceMod = Creature.GetNegativeRatingMod(defender.GetPKDamageResistRating());
+
 
             // get shield modifier
             ShieldMod = defender.GetShieldMod(attacker, DamageType, Weapon);
 
             // calculate final output damage
-            Damage = DamageBeforeMitigation * ArmorMod * ShieldMod * ResistanceMod * DamageResistanceRatingMod;
+
+            Damage = DamageBeforeMitigation * ArmorMod * ShieldMod * ResistanceMod * DamageResistanceRatingMod;            
+
             DamageMitigated = DamageBeforeMitigation - Damage;
 
+            // elites hit for double dmg
+            if (attacker.IsElite)
+                Damage *= 2;
+            
             return Damage;
         }
 
@@ -409,6 +423,12 @@ namespace ACE.Server.Entity
         {
             // get cached body parts table
             var bodyParts = Creature.GetBodyParts(defender.WeenieClassId);
+
+            if (bodyParts == null)
+            {
+                Evaded = true;
+                return;
+            }
 
             // rng roll for body part
             var bodyPart = bodyParts.RollBodyPart(quadrant);

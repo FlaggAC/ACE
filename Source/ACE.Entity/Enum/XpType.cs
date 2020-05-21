@@ -12,6 +12,8 @@ namespace ACE.Entity.Enum
         Fellowship,
         Allegiance,
         Admin,
-        Emote
+        Emote,
+        Bottle,
+        PK
     }
 }

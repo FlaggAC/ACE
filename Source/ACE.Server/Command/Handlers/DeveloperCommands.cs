@@ -779,7 +779,10 @@ namespace ACE.Server.Command.Handlers
                     try
                     {
                         var amount = aceParams[1].AsLong;
-                        aceParams[0].AsPlayer.GrantXP(amount, XpType.Admin, ShareType.None); 
+                        if (aceParams[0].AsPlayer.PKMode)
+                            aceParams[0].AsPlayer.GrantXP(amount, XpType.PK, ShareType.None);
+                        else
+                            aceParams[0].AsPlayer.GrantXP(amount, XpType.Admin, ShareType.None); 
 
                         session.Network.EnqueueSend(new GameMessageSystemChat($"{amount:N0} experience granted.", ChatMessageType.Advancement));
 
@@ -2866,7 +2869,7 @@ namespace ACE.Server.Command.Handlers
         {
             if (parameters.Length == 0)
             {
-                session.Player.RecordCast.Enabled = !session.Player.RecordCast.Enabled;
+                session.Player.RecordCast.Enabled = session.Player.RecordCast.Mode != RecordCastMode.Enabled;
             }
             else
             {

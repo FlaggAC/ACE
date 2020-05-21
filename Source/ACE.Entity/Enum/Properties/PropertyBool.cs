@@ -176,6 +176,52 @@ namespace ACE.Entity.Enum.Properties
         HouseEvicted                     = 9003,
         [ServerOnly]
         UntrainedSkills                  = 9004,
+        [ServerOnly]
+        Trophy                           = 9105,
+        [ServerOnly]
+        NetherFix                        = 9106,
+        [ServerOnly]
+        EliteTrigger                     = 9107,
+        [ServerOnly]
+        IsElite                          = 9108,
+        [ServerOnly]
+        SplitMod                         = 9109,
+        [ServerOnly]
+        DiscoMod                         = 9110,
+        [ServerOnly]
+        IsMini                           = 9111,
+        [ServerOnly]
+        IsRare                           = 9112,
+        [ServerOnly]
+        BeefyMod                         = 9113,
+        [ServerOnly]
+        Warded                           = 9114,
+        [ServerOnly]
+        TogglePhys                       = 9115,
+        [ServerOnly]
+        ToggleMis                        = 9116,
+        [ServerOnly]
+        ToggleSpell                      = 9117,
+        [ServerOnly]
+        ToggleRNG                        = 9118,
+        [ServerOnly]
+        MeteorMod                        = 9119,
+        [ServerOnly]
+        TeleMod                          = 9120,
+        [ServerOnly]
+        NovaMod                          = 9121,
+        [ServerOnly]
+        SupportMod                       = 9122,
+        [ServerOnly]
+        MirrorMod                        = 9123,
+        [ServerOnly]
+        MirrorMob                        = 9124,
+        [ServerOnly]
+        XpShow                           = 9125,
+        [ServerOnly]
+        TradeBotCheck                    = 9126,
+        [ServerOnly]
+        PKMode                           = 9127,
     }
 
     public static class PropertyBoolExtensions

@@ -4,6 +4,7 @@ using ACE.Entity;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using System.Numerics;
+using ACE.Server.Managers;
 
 namespace ACE.Server.Entity
 {
@@ -196,14 +197,14 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The base amount of damage for this spell
         /// </summary>
-        public int BaseIntensity { get => _spell.BaseIntensity ?? 0; }
+        public int BaseIntensity { get => _spell.BaseIntensity ?? 0; }       
 
         public int MinDamage { get => BaseIntensity; }
 
         /// <summary>
         /// The maximum additional daamage for this spell
         /// </summary>
-        public int Variance { get => _spell.Variance ?? 0; }
+        public int Variance { get => _spell.Variance ?? 0; }        
 
         public int MaxDamage { get => BaseIntensity + Variance; }
 

@@ -423,8 +423,17 @@ namespace ACE.Server.WorldObjects
 
                 if (AllegianceXPCached != 0)
                 {
-                    Session.Network.EnqueueSend(new GameMessageSystemChat($"Your Vassals have produced experience points for you.\nTaking your skills as a leader into account, you gain {AllegianceXPCached:N0} xp.", ChatMessageType.Broadcast));
-                    AddAllegianceXP();
+                    
+                    if (Enlightenment >= 1)
+                    {
+                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Your vassals produced experience for you, but since you are enlightened, you gain 0 experience.", ChatMessageType.Broadcast));
+                        return;
+                    }
+                    else
+                    {
+                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Your Vassals have produced experience points for you.\nTaking your skills as a leader into account, you gain {AllegianceXPCached:N0} xp.", ChatMessageType.Broadcast));
+                        AddAllegianceXP();
+                    }
                 }
             });
             actionChain.EnqueueChain();
@@ -474,11 +483,19 @@ namespace ACE.Server.WorldObjects
             if (AllegianceXPCached == 0) return;
 
             // TODO: handle ulong -> long?
-            GrantXP((long)AllegianceXPCached, XpType.Allegiance, ShareType.None);
+            if (Enlightenment >= 1)
+            {
+                AllegianceXPCached = 0;
+                return;
+            }
+            else
+            {
+                GrantXP((long)AllegianceXPCached, XpType.Allegiance, ShareType.None);
 
-            AllegianceXPReceived += AllegianceXPCached;
+                AllegianceXPReceived += AllegianceXPCached;
 
-            AllegianceXPCached = 0;
+                AllegianceXPCached = 0;
+            }
         }
 
         public void HandleActionQueryMotd()

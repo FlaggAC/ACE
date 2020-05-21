@@ -615,6 +615,40 @@ namespace ACE.Entity.Enum.Properties
         /// </summary>
         [ServerOnly]
         InventoryOrder                          = 9015,
+        [ServerOnly]
+        KillStreak                              = 9050,
+        [ServerOnly]
+        BattleRating                            = 9060,
+        [ServerOnly]
+        LowDrudgeSlayerCount                    = 9072,
+        [ServerOnly]
+        MidDrudgeSlayerCount                    = 9073,
+        [ServerOnly]
+        HighDrudgeSlayerCount                   = 9074,
+        [ServerOnly]
+        LowNetherResist                         = 9075,
+        [ServerOnly]
+        MedNetherResist                         = 9076,
+        [ServerOnly]
+        HighNetherResist                        = 9077,
+        [ServerOnly]
+        HigherNetherResist                      = 9078,
+        [ServerOnly]
+        MirrorMobCount                          = 9079,
+        [ServerOnly]
+        DeathCount                              = 9080,
+        [ServerOnly]
+        NonPkModeStoredLevel                    = 9081,
+        [ServerOnly]
+        PkModeStoredLevel                       = 9082,
+        [ServerOnly]
+        NonPkModeStoredAvailableCredits         = 9083,
+        [ServerOnly]
+        PkModeStoredPkDmgRating                 = 9084,
+        [ServerOnly]
+        PkModeStoredPkDmgRedRating              = 9085,
+
+
     }
 
     public static class PropertyIntExtensions

@@ -75,5 +75,23 @@ namespace ACE.Entity.Enum
         Oak             = 0x0000004B,
         Pine            = 0x0000004C,
         Teak            = 0x0000004D,
+        LessDrudgeSlayer            = 0x0000004E, // 78
+        LessLessDrudgeSlayer        = 0x0000004F, // 79
+        LessGreaterDrudgeSlayer     = 0x00000050, // 80
+        ModerateDrudgeSlayer        = 0x00000051, // 81
+        ModerateLessDrudgeSlayer    = 0x00000052, // 82
+        ModerateGreaterDrudgeSlayer = 0x00000053, // 83
+        GreaterDrudgeSlayer         = 0x00000054, // 84
+        GreaterLessDrudgeSlayer     = 0x00000055, // 85
+        GreaterGreaterDrudgeSlayer  = 0x00000056, // 86
     }
+
+    public static class MaterialExtensions
+    {
+        public static bool IsCustom(this MaterialType type)
+        {
+            return type > MaterialType.Teak;
+        }
+    }
+
 }

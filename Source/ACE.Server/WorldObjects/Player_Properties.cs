@@ -1292,6 +1292,11 @@ namespace ACE.Server.WorldObjects
             get => GetProperty(PropertyBool.Trophy) ?? false;
             set { if (!value) RemoveProperty(PropertyBool.Trophy); else SetProperty(PropertyBool.Trophy, value); }
         }
+        public bool XpShow
+        {
+            get => GetProperty(PropertyBool.XpShow) ?? true;
+            set { if (!value) RemoveProperty(PropertyBool.XpShow); else SetProperty(PropertyBool.XpShow, value); }
+        }
 
         public bool NetherFix
         {
@@ -1339,6 +1344,186 @@ namespace ACE.Server.WorldObjects
         {
             get => GetProperty(PropertyInt.HigherNetherResist) ?? 1;
             set { if (value == 0) RemoveProperty(PropertyInt.HigherNetherResist); else SetProperty(PropertyInt.HigherNetherResist, (int)value); }
-        }                
+        }
+        public int DeathCount
+        {
+            get => GetProperty(PropertyInt.DeathCount) ?? 0;
+            set { if (value == 0) RemoveProperty(PropertyInt.DeathCount); else SetProperty(PropertyInt.DeathCount, (int)value); }
+        }
+        public double? StreakTimer
+        {
+            get => GetProperty(PropertyFloat.StreakTimer);
+            set { if (value == 0) RemoveProperty(PropertyFloat.StreakTimer); else SetProperty(PropertyFloat.StreakTimer, value.Value); }
+        }
+        public long? NonPkModeStoredTotalExperience
+        {
+            get => GetProperty(PropertyInt64.NonPkModeStoredTotalExperience);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt64.NonPkModeStoredTotalExperience); else SetProperty(PropertyInt64.NonPkModeStoredTotalExperience, value.Value); }
+        }
+        public long? PkModeStoredTotalExperience
+        {
+            get => GetProperty(PropertyInt64.PkModeStoredTotalExperience);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt64.PkModeStoredTotalExperience); else SetProperty(PropertyInt64.PkModeStoredTotalExperience, value.Value); }
+        }
+        public long? NonPkModeStoredDelevelXP
+        {
+            get => GetProperty(PropertyInt64.NonPkModeStoredDelevelXP);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt64.NonPkModeStoredDelevelXP); else SetProperty(PropertyInt64.NonPkModeStoredDelevelXP, value.Value); }
+        }
+        public long? PkModeStoredDelevelXP
+        {
+            get => GetProperty(PropertyInt64.PkModeStoredDelevelXP);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt64.PkModeStoredDelevelXP); else SetProperty(PropertyInt64.PkModeStoredDelevelXP, value.Value); }
+        }
+        public long? NonPkModeStoredAvailableExperience
+        {
+            get => GetProperty(PropertyInt64.NonPkModeStoredAvailableExperience);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt64.NonPkModeStoredAvailableExperience); else SetProperty(PropertyInt64.NonPkModeStoredAvailableExperience, value.Value); }
+        }
+        public long? PkModeStoredAvailableExperience
+        {
+            get => GetProperty(PropertyInt64.PkModeStoredAvailableExperience);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt64.PkModeStoredAvailableExperience); else SetProperty(PropertyInt64.PkModeStoredAvailableExperience, value.Value); }
+        }
+        public int? NonPkModeStoredLevel
+        {
+            get => GetProperty(PropertyInt.NonPkModeStoredLevel);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.NonPkModeStoredLevel); else SetProperty(PropertyInt.NonPkModeStoredLevel, value.Value); }
+        }
+        public int? PkModeStoredLevel
+        {
+            get => GetProperty(PropertyInt.PkModeStoredLevel);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.PkModeStoredLevel); else SetProperty(PropertyInt.PkModeStoredLevel, value.Value); }
+        }
+        public int? NonPkModeStoredAvailableCredits
+        {
+            get => GetProperty(PropertyInt.NonPkModeStoredAvailableCredits);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.NonPkModeStoredAvailableCredits); else SetProperty(PropertyInt.NonPkModeStoredAvailableCredits, value.Value); }
+        }
+        public int? PkModeStoredPkDmgRating
+        {
+            get => GetProperty(PropertyInt.PkModeStoredPkDmgRating);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.PkModeStoredPkDmgRating); else SetProperty(PropertyInt.PkModeStoredPkDmgRating, value.Value); }
+        }        
+        public int? PkModeStoredPkDmgRedRating
+        {
+            get => GetProperty(PropertyInt.PkModeStoredPkDmgRedRating);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.PkModeStoredPkDmgRedRating); else SetProperty(PropertyInt.PkModeStoredPkDmgRedRating, value.Value); }
+        }
+        public bool PKMode
+        {
+            get => GetProperty(PropertyBool.PKMode) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.PKMode); else SetProperty(PropertyBool.PKMode, value); }
+        }
+        public string PlayersKilled
+        {
+            get => GetProperty(PropertyString.PlayersKilled);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled); else SetProperty(PropertyString.PlayersKilled, value); }
+        }
+        public string PlayersKilled1
+        {
+            get => GetProperty(PropertyString.PlayersKilled1);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled1); else SetProperty(PropertyString.PlayersKilled1, value); }
+        }
+        public string PlayersKilled2
+        {
+            get => GetProperty(PropertyString.PlayersKilled2);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled2); else SetProperty(PropertyString.PlayersKilled2, value); }
+        }
+        public string PlayersKilled3
+        {
+            get => GetProperty(PropertyString.PlayersKilled3);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled3); else SetProperty(PropertyString.PlayersKilled3, value); }
+        }
+        public string PlayersKilled4
+        {
+            get => GetProperty(PropertyString.PlayersKilled4);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled4); else SetProperty(PropertyString.PlayersKilled4, value); }
+        }
+        public string PlayersKilled5
+        {
+            get => GetProperty(PropertyString.PlayersKilled5);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled5); else SetProperty(PropertyString.PlayersKilled5, value); }
+        }
+        public string PlayersKilled6
+        {
+            get => GetProperty(PropertyString.PlayersKilled6);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled6); else SetProperty(PropertyString.PlayersKilled6, value); }
+        }
+        public string PlayersKilled7
+        {
+            get => GetProperty(PropertyString.PlayersKilled7);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled7); else SetProperty(PropertyString.PlayersKilled7, value); }
+        }
+        public string PlayersKilled8
+        {
+            get => GetProperty(PropertyString.PlayersKilled8);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled8); else SetProperty(PropertyString.PlayersKilled8, value); }
+        }
+        public string PlayersKilled9
+        {
+            get => GetProperty(PropertyString.PlayersKilled9);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled9); else SetProperty(PropertyString.PlayersKilled9, value); }
+        }
+        public string PlayersKilled10
+        {
+            get => GetProperty(PropertyString.PlayersKilled10);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilled10); else SetProperty(PropertyString.PlayersKilled10, value); }
+        }
+        public string PlayersKilledIP1
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP1);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP1); else SetProperty(PropertyString.PlayersKilledIP1, value); }
+        }
+        public string PlayersKilledIP2
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP2);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP2); else SetProperty(PropertyString.PlayersKilledIP2, value); }
+        }
+        public string PlayersKilledIP3
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP3);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP3); else SetProperty(PropertyString.PlayersKilledIP3, value); }
+        }
+        public string PlayersKilledIP4
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP4);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP4); else SetProperty(PropertyString.PlayersKilledIP4, value); }
+        }
+        public string PlayersKilledIP5
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP5);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP5); else SetProperty(PropertyString.PlayersKilledIP5, value); }
+        }
+        public string PlayersKilledIP6
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP6);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP6); else SetProperty(PropertyString.PlayersKilledIP6, value); }
+        }
+        public string PlayersKilledIP7
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP7);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP7); else SetProperty(PropertyString.PlayersKilledIP7, value); }
+        }
+        public string PlayersKilledIP8
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP8);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP8); else SetProperty(PropertyString.PlayersKilledIP8, value); }
+        }
+        public string PlayersKilledIP9
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP9);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP9); else SetProperty(PropertyString.PlayersKilledIP9, value); }
+        }
+        public string PlayersKilledIP10
+        {
+            get => GetProperty(PropertyString.PlayersKilledIP10);
+            set { if (value == null) RemoveProperty(PropertyString.PlayersKilledIP10); else SetProperty(PropertyString.PlayersKilledIP10, value); }
+        }
+        public double? PKModeDuration
+        {
+            get => GetProperty(PropertyFloat.PKModeDuration);
+            set { if (value == 0) RemoveProperty(PropertyFloat.PKModeDuration); else SetProperty(PropertyFloat.PKModeDuration, value.Value); }
+        }
     }
 }

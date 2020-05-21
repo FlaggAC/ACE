@@ -31,7 +31,8 @@ namespace ACE.Server.Managers
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly PhysicsEngine Physics;
-
+        public static string Controlblock { get; set; }
+        public static double ControlblockTimer { get; set; }
         public static bool WorldActive { get; private set; }
         private static volatile bool pendingWorldStop;
 

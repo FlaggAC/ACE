@@ -187,7 +187,11 @@ namespace ACE.Server.Entity
 
         public int? Gender => GetProperty(PropertyInt.Gender);
 
-
+        public int? PkModeStoredLevel
+        {
+            get => GetProperty(PropertyInt.PkModeStoredLevel);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.PkModeStoredLevel); else SetProperty(PropertyInt.PkModeStoredLevel, value.Value); }
+        }
         public uint? MonarchId
         {
             get => GetProperty(PropertyInstanceId.Monarch);

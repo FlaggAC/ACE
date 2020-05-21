@@ -399,7 +399,16 @@ namespace ACE.Server.WorldObjects
             {
                 var weenie = DatabaseManager.World.GetCachedWeenie(wcid);
 
-                bpTable = new BodyPartTable(weenie);
+                try
+                {
+                    bpTable = new BodyPartTable(weenie);
+                }
+                catch (Exception e)
+                {
+                    log.Error(e);
+                    log.Error($"Monster_Combat.GetBodyParts({wcid}) - bad data for wcid {wcid}");
+                    return null;
+                }
                 BPTableCache[wcid] = bpTable;
             }
             return bpTable;

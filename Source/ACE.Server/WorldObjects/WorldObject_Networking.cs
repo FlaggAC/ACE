@@ -74,10 +74,20 @@ namespace ACE.Server.WorldObjects
                 objDescriptionFlags &= ~ObjectDescriptionFlag.UiHidden;
 
             writer.Write((uint)weenieFlags);
-            writer.WriteString16L(Name ?? String.Empty);
+
+            var name = Name ?? string.Empty;
+            if (MaterialType > ACE.Entity.Enum.MaterialType.Teak)
+                name = $"{name}";
+
+            writer.WriteString16L(name);
             writer.WritePackedDword(WeenieClassId);
             writer.WritePackedDwordOfKnownType(IconId, 0x6000000);
-            writer.Write((uint)ItemType);
+
+            var itemType = ItemType;
+            if (gamedataonly && itemType == ItemType.TinkeringMaterial)
+                itemType = ItemType.Misc;
+
+            writer.Write((uint)itemType);
             writer.Write((uint)objDescriptionFlags);
             writer.Align();
 
@@ -795,7 +805,7 @@ namespace ACE.Server.WorldObjects
             if ((IconOverlayId != null) && (IconOverlayId != 0))
                 weenieHeaderFlag |= WeenieHeaderFlag.IconOverlay;
 
-            if (MaterialType != null)
+            if (MaterialType != null && MaterialType <= ACE.Entity.Enum.MaterialType.Teak)
                 weenieHeaderFlag |= WeenieHeaderFlag.MaterialType;
 
             return weenieHeaderFlag;
@@ -1097,6 +1107,9 @@ namespace ACE.Server.WorldObjects
 
                 CurrentMotionState = motion;
                 EnqueueBroadcastMotion(motion);
+
+                if (castGesture && this is Player _player)
+                    _player.DoCastLog(motionCommand);
             });
 
             if (half)
@@ -1141,6 +1154,10 @@ namespace ACE.Server.WorldObjects
 
                 foreach (var motionCommand in motionCommands)
                     ApplyPhysicsMotion(new Motion(stance, motionCommand, speed));
+
+                // only called by magic windup in fast tick mode currently
+                if (this is Player player)
+                    player.DoWindupLog(motionCommands);
             });
 
             actionChain.AddDelaySeconds(animLength);

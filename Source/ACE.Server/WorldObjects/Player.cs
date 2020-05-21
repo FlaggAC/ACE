@@ -349,6 +349,8 @@ namespace ACE.Server.WorldObjects
                 pressurePlate.OnCollideObject(this);
             else if (target is Hotspot hotspot)
                 hotspot.OnCollideObject(this);
+            else if (target is SpellProjectile spellProjectile)
+                spellProjectile.OnCollideObject(this);
         }
 
         public override void OnCollideObjectEnd(WorldObject target)
@@ -465,7 +467,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public bool LogOut(bool clientSessionTerminatedAbruptly = false, bool forceImmediate = false)
         {
-            if (!forceImmediate && Session.Player.Level > 9)
+            if (!forceImmediate && Session.Player.Level > 49) // committed adding comment to log entry.
             {
                 var deflog = 20;
 
@@ -493,7 +495,7 @@ namespace ACE.Server.WorldObjects
                 {
                     PKLogout = true;
 
-                    LogoffTimestamp = Time.GetFutureUnixTime(PropertyManager.GetLong("pk_timer").Item);
+                    LogoffTimestamp = Time.GetFutureUnixTime(deflog);
                     PlayerManager.AddPlayerToLogoffQueue(this);
                 }
                 return false;

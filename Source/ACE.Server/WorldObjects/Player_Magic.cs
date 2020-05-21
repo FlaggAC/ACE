@@ -6,6 +6,7 @@ using ACE.Common;
 using ACE.DatLoader;
 using ACE.Entity;
 using ACE.Entity.Enum;
+using ACE.Entity.Enum.Properties;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
 using ACE.Server.Managers;
@@ -480,6 +481,23 @@ namespace ACE.Server.WorldObjects
             if (isWeaponSpell)
                 castingPreCheckStatus = CastingPreCheckStatus.Success;
 
+            // limit streak usage
+            HashSet<SpellCategory> StreakSpells = new HashSet<SpellCategory>
+                {
+                   (SpellCategory)243, (SpellCategory)244, (SpellCategory)245, (SpellCategory)246, (SpellCategory)247, (SpellCategory)248, (SpellCategory)249
+                };
+
+            if (Time.GetUnixTime() < StreakTimer && StreakSpells.Contains(spell.Category))
+            {
+                if (Time.GetUnixTime() > StreakTimer && castingPreCheckStatus == CastingPreCheckStatus.CastFailed)
+                    RemoveProperty(PropertyFloat.StreakTimer);
+                else
+                {
+                    castingPreCheckStatus = CastingPreCheckStatus.CastFailed;
+                    Session.Network.EnqueueSend(new GameMessageSystemChat($"Bish, quit spamming streaks.", ChatMessageType.Magic));
+                }
+            }
+
             // limit casting time between war and void
             if (spell.School == MagicSchool.VoidMagic && LastSuccessCast_School == MagicSchool.WarMagic ||
                 spell.School == MagicSchool.WarMagic && LastSuccessCast_School == MagicSchool.VoidMagic)
@@ -867,6 +885,17 @@ namespace ACE.Server.WorldObjects
                 //player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YouHaveMovedTooFar));
                 Session.Network.EnqueueSend(new GameMessageSystemChat("Your movement disrupted spell casting!", ChatMessageType.Magic));
             }
+
+            HashSet<SpellCategory> StreakSpells = new HashSet<SpellCategory>
+                {
+                   (SpellCategory)243, (SpellCategory)244, (SpellCategory)245, (SpellCategory)246, (SpellCategory)247, (SpellCategory)248, (SpellCategory)249
+                };
+
+            if (StreakSpells.Contains(spell.Category) && !StreakTimer.HasValue)
+                SetProperty(PropertyFloat.StreakTimer, Time.GetFutureUnixTime(2.3f));
+
+            if (Time.GetUnixTime() > StreakTimer)
+                RemoveProperty(PropertyFloat.StreakTimer);
 
             if (finishCast)
                 FinishCast();
@@ -1503,9 +1532,19 @@ namespace ACE.Server.WorldObjects
                 if (!MagicState.IsCasting) return;
 
                 if (!MagicState.CastMotionDone)
+                {
+                    if (RecordCast.Enabled)
+                        RecordCast.Log($"{Name}.OnMoveComplete_Magic({status}) - DoWindup");
+
                     DoWindup(MagicState.WindupParams, checkAngle);
+                }
                 else
+                {
+                    if (RecordCast.Enabled)
+                        RecordCast.Log($"{Name}.OnMoveComplete_Magic({status}) - DoCastSpell");
+
                     DoCastSpell(MagicState, checkAngle);
+                }
             });
             actionChain.EnqueueChain();
         }
@@ -1559,6 +1598,39 @@ namespace ACE.Server.WorldObjects
                 else
                     HandleActionMagicCastUnTargetedSpell(MagicState.CastQueue.SpellId);
             }
+        }
+
+        public void DoWindupLog(List<MotionCommand> windupGestures)
+        {
+            if (!RecordCast.Enabled) return;
+
+            foreach (var windupGesture in windupGestures)
+            {
+                if (Physics.Animation.MotionTable.MagicAnims.TryGetValue(windupGesture, out var anim_id))
+                {
+                    if (PhysicsObj.PartArray.Sequence.has_anim(anim_id))
+                        RecordCast.Log($"Windup gesture {windupGesture} found in sequence AnimList");
+                    else
+                        RecordCast.Log($"Windup gesture {windupGesture} NOT found in sequence AnimList");
+                }
+                else
+                    RecordCast.Log($"Windup gesture {windupGesture} not found");
+            }
+        }
+
+        public void DoCastLog(MotionCommand castGesture)
+        {
+            if (!RecordCast.Enabled) return;
+
+            if (Physics.Animation.MotionTable.MagicAnims.TryGetValue(castGesture, out var anim_id))
+            {
+                if (PhysicsObj.PartArray.Sequence.has_anim(anim_id))
+                    RecordCast.Log($"Cast gesture {castGesture} found in sequence AnimList");
+                else
+                    RecordCast.Log($"Cast gesture {castGesture} NOT found in sequence AnimList");
+            }
+            else
+                RecordCast.Log($"Cast gesture {castGesture} not found");
         }
     }
 }

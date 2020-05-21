@@ -299,5 +299,119 @@ namespace ACE.Server.WorldObjects
             get => GetProperty(PropertyString.KillQuest3);
             set { if (value == null) RemoveProperty(PropertyString.KillQuest3); else SetProperty(PropertyString.KillQuest3, value); }
         }
+
+        public bool EliteTrigger
+        {
+            get => GetProperty(PropertyBool.EliteTrigger) ?? true;
+            set { if (!value) RemoveProperty(PropertyBool.EliteTrigger); else SetProperty(PropertyBool.EliteTrigger, value); }
+        }
+        public bool IsElite
+        {
+            get => GetProperty(PropertyBool.IsElite) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.IsElite); else SetProperty(PropertyBool.IsElite, value); }
+        }
+        public bool IsMini
+        {
+            get => GetProperty(PropertyBool.IsMini) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.IsMini); else SetProperty(PropertyBool.IsMini, value); }
+        }
+        public bool DiscoMod
+        {
+            get => GetProperty(PropertyBool.DiscoMod) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.DiscoMod); else SetProperty(PropertyBool.DiscoMod, value); }
+        }
+        public bool SplitMod
+        {
+            get => GetProperty(PropertyBool.SplitMod) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.SplitMod); else SetProperty(PropertyBool.SplitMod, value); }
+        }
+
+        public bool IsRare
+        {
+            get => GetProperty(PropertyBool.IsRare) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.IsRare); else SetProperty(PropertyBool.IsRare, value); }
+        }
+
+        public bool BeefyMod
+        {
+            get => GetProperty(PropertyBool.BeefyMod) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.BeefyMod); else SetProperty(PropertyBool.BeefyMod, value); }
+        }
+
+        public bool Warded
+        {
+            get => GetProperty(PropertyBool.Warded) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.Warded); else SetProperty(PropertyBool.Warded, value); }
+        }
+
+        public bool TogglePhys
+        {
+            get => GetProperty(PropertyBool.TogglePhys) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.TogglePhys); else SetProperty(PropertyBool.TogglePhys, value); }
+        }
+        public bool ToggleMis
+        {
+            get => GetProperty(PropertyBool.ToggleMis) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.ToggleMis); else SetProperty(PropertyBool.ToggleMis, value); }
+        }
+        public bool ToggleSpell
+        {
+            get => GetProperty(PropertyBool.ToggleSpell) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.ToggleSpell); else SetProperty(PropertyBool.ToggleSpell, value); }
+        }
+
+        public bool ToggleRNG
+        {
+            get => GetProperty(PropertyBool.ToggleRNG) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.ToggleRNG); else SetProperty(PropertyBool.ToggleRNG, value); }
+        }
+
+        public bool MeteorMod
+        {
+            get => GetProperty(PropertyBool.MeteorMod) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.MeteorMod); else SetProperty(PropertyBool.MeteorMod, value); }
+        }
+
+        public bool TeleMod
+        {
+            get => GetProperty(PropertyBool.TeleMod) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.MeteorMod); else SetProperty(PropertyBool.TeleMod, value); }
+        }
+
+        public bool NovaMod
+        {
+            get => GetProperty(PropertyBool.NovaMod) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.NovaMod); else SetProperty(PropertyBool.NovaMod, value); }
+        }
+
+        public bool SupportMod
+        {
+            get => GetProperty(PropertyBool.SupportMod) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.SupportMod); else SetProperty(PropertyBool.SupportMod, value); }
+        }
+
+        public bool MirrorMod
+        {
+            get => GetProperty(PropertyBool.MirrorMod) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.MirrorMod); else SetProperty(PropertyBool.MirrorMod, value); }
+        }
+
+        public bool MirrorMob
+        {
+            get => GetProperty(PropertyBool.MirrorMob) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.MirrorMob); else SetProperty(PropertyBool.MirrorMob, value); }
+        }
+
+        public double? EliteDungeonIdleTime
+        {
+            get => GetProperty(PropertyFloat.EliteDungeonIdleTime);
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.EliteDungeonIdleTime); else SetProperty(PropertyFloat.EliteDungeonIdleTime, value.Value); }
+        }
+
+        public int? MirrorMobCount
+        {
+            get => GetProperty(PropertyInt.MirrorMobCount);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.MirrorMobCount); else SetProperty(PropertyInt.MirrorMobCount, value.Value); }
+        }
     }
 }

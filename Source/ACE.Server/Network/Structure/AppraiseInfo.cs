@@ -364,6 +364,9 @@ namespace ACE.Server.Network.Structure
             if (wo.ItemSkillLimit != null)
                 PropertiesInt[PropertyInt.AppraisalItemSkill] = (int)wo.ItemSkillLimit;
 
+            if (PropertiesInt.TryGetValue(PropertyInt.MaterialType, out var materialType) && ((MaterialType)materialType).IsCustom())
+                PropertiesInt.Remove(PropertyInt.MaterialType);
+
             if (PropertiesFloat.ContainsKey(PropertyFloat.WeaponDefense) && !(wo is Missile) && !(wo is Ammunition))
             {
                 var defenseMod = wo.EnchantmentManager.GetDefenseMod();

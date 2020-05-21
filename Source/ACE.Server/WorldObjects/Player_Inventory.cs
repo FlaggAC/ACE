@@ -1586,7 +1586,9 @@ namespace ACE.Server.WorldObjects
                 case WieldRequirement.Level:
 
                     // verify player level
-                    if (Level < difficulty)
+                    if (PKMode)
+                        return WeenieError.None;
+                    else if (Level < difficulty)
                         return WeenieError.LevelTooLow;
                     break;
 

@@ -1,8 +1,10 @@
 using System;
+using ACE.Common;
 using ACE.Entity;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Server.Entity;
+using ACE.Server.Factories;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
@@ -120,7 +122,90 @@ namespace ACE.Server.WorldObjects
                     //target.EmoteManager.OnActivation(creature); // found a few things with Activation on them but not ActivationResponse.Emote...
                     EmoteManager.OnUse(creature);
                 }
+                if (activator != null && player != null && this != null)
+                {
+                    if (player.PKMode == true && WeenieClassId == 43941 || player.PKMode == true && WeenieClassId == 43941 || player.PKMode == true && Name.Contains("Enlightenment") || player.PKMode == true && Name.Contains("Forgetfulness") || player.PKMode == true && WeenieClassId == 44950)
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot alter your skills or attributes while in PK Mode.", ChatMessageType.Broadcast));
+                        return;
+                    }
 
+                    if (player.PKMode == true && WeenieClassId == 777778 && player.MonarchId.HasValue && player.HasAllegiance)
+                    {
+                        if (player.PKTimerActive)
+                        {
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have been involved in a pk battle too recently to claim the Control Block.", ChatMessageType.Magic));
+                            return;
+                        }
+
+                        if (Time.GetUnixTime() < WorldManager.ControlblockTimer && player.Allegiance.Monarch.Player.Name != WorldManager.Controlblock)
+                        {
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot claim control until after the control block timer has expired.", ChatMessageType.Magic));
+                            return;
+                        }
+
+                        if (player.Allegiance.Monarch.Player.Name != WorldManager.Controlblock)
+                        {
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your allegiance takes control of the control block.", ChatMessageType.Broadcast));
+                            WorldManager.Controlblock = player.Allegiance.Monarch.Player.Name;
+                            LongDesc = $"The current Monarchy that has control is: {WorldManager.Controlblock}";
+                            WorldManager.ControlblockTimer = Time.GetFutureUnixTime(600);
+                            return;
+                        }
+
+                        if (player.QuestManager.CanSolve("claimreward"))
+                        {
+                            var mfk = WorldObjectFactory.CreateNewWorldObject("ace38456-manaforgekey");
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have claimed a reward.", ChatMessageType.Broadcast));
+                            player.GrantLevelProportionalXp(0.20, 1, 100000000, false);
+                            player.TryAddToInventory(mfk);
+                            player.QuestManager.Update("claimreward");
+                            return;
+                        }
+
+                        if (player.Allegiance.Monarch.Player.Name == WorldManager.Controlblock)
+                        {
+                            if (!player.QuestManager.CanSolve("claimreward"))
+                                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your allegiance already has control and you have claimed a reward too recently.", ChatMessageType.Broadcast));
+                            else
+                                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your allegiance already has control", ChatMessageType.Broadcast));
+                            return;
+                        }
+                    }
+                    else if (player.HasAllegiance && WorldManager.Controlblock != null)
+                    {
+                        if (player.PKMode == false && WeenieClassId == 777778 && WorldManager.Controlblock == player.Allegiance.Monarch.Player.Name)
+                        {
+
+                            if (player.QuestManager.CanSolve("claimreward"))
+                            {
+                                var mfk = WorldObjectFactory.CreateNewWorldObject("ace38456-manaforgekey");
+                                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have claimed a reward.", ChatMessageType.Broadcast));
+                                player.GrantLevelProportionalXp(0.10, 1, 100000000, false);
+                                player.TryAddToInventory(mfk);
+                                player.QuestManager.Update("claimreward");
+                                return;
+                            }
+
+                            if (player.Allegiance.Monarch.Player.Name == WorldManager.Controlblock)
+                            {
+                                if (!player.QuestManager.CanSolve("claimreward"))
+                                    player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have claimed a reward too recently.", ChatMessageType.Broadcast));
+                                return;
+                            }
+                            else if (player.Allegiance.Monarch.Player.Name != WorldManager.Controlblock)
+                            {
+                                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You allegiance does not own the Control Block and cannot claim the reward.", ChatMessageType.Broadcast));
+                                return;
+                            }
+                        }
+                    }
+                    else if (!player.HasAllegiance && WeenieClassId == 777778)
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You must be a part of an allegiance to interact with the Control Block.", ChatMessageType.Broadcast));
+                        return;
+                    }
+                }
                 ActOnUse(activator);
             }
 

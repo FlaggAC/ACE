@@ -50,6 +50,56 @@ namespace ACE.Server.WorldObjects
                     Account15Days = true;
             }
 
+            // 
+            // Sets ResistNether higher or lower, depending on needed adjustment.
+            if (!NetherFix) 
+            {
+                var netheresist = GetProperty(PropertyInt.DotResistRating);
+
+                if (netheresist == null)
+                    netheresist = 0;
+
+                if (Level <= 99)
+                {
+                    UpdateProperty(this, PropertyFloat.ResistNether, 0.95);
+                    SetProperty(PropertyInt.DotResistRating, 5);                    
+                    SetProperty(PropertyInt.LowNetherResist, 2);
+                    SetProperty(PropertyBool.NetherFix, true);
+                }
+                if (Level >= 100 && Level <= 149)
+                {
+                    UpdateProperty(this, PropertyFloat.ResistNether, 0.95);
+                    SetProperty(PropertyInt.DotResistRating, 10);
+                    SetProperty(PropertyInt.LowNetherResist, 2);
+                    SetProperty(PropertyInt.MedNetherResist, 2);
+                    SetProperty(PropertyBool.NetherFix, true);
+                }
+                if (Level >= 150 && Level <= 199)
+                {
+                    UpdateProperty(this, PropertyFloat.ResistNether, 0.85);
+                    SetProperty(PropertyInt.DotResistRating, 15);                   
+                    SetProperty(PropertyInt.LowNetherResist, 2);
+                    SetProperty(PropertyInt.MedNetherResist, 2);
+                    SetProperty(PropertyInt.HighNetherResist, 2);
+                    SetProperty(PropertyBool.NetherFix, true);
+                }                    
+                if (Level >= 200)
+                {
+                    UpdateProperty(this, PropertyFloat.ResistNether, 0.85);
+                    SetProperty(PropertyInt.DotResistRating, 30);
+                    SetProperty(PropertyInt.LowNetherResist, 2);
+                    SetProperty(PropertyInt.MedNetherResist, 2);
+                    SetProperty(PropertyInt.HighNetherResist, 2);
+                    SetProperty(PropertyInt.HigherNetherResist, 2);
+                    SetProperty(PropertyBool.NetherFix, true);
+                }
+            }
+
+            if (EliteTrigger)
+            {
+                SetProperty(PropertyBool.EliteTrigger, false);
+            }
+
             // SendSelf will trigger the entrance into portal space
             SendSelf();
 
@@ -89,7 +139,7 @@ namespace ACE.Server.WorldObjects
             AuditItemSpells();
             AuditEquippedItems();
 
-            HandleMissingXp();
+            //HandleMissingXp();
             HandleSkillCreditRefund();
 
             if (PlayerKillerStatus == PlayerKillerStatus.PKLite && !PropertyManager.GetBool("pkl_server").Item)

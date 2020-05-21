@@ -16,6 +16,7 @@ using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects;
 using ACE.Entity;
+using ACE.Common;
 
 namespace ACE.Server.Command.Handlers
 {
@@ -32,38 +33,189 @@ namespace ACE.Server.Command.Handlers
             session.Network.EnqueueSend(new GameMessageSystemChat($"Current world population: {PlayerManager.GetOnlineCount().ToString()}\n", ChatMessageType.Broadcast));
         }
 
-        // unstuck
-        [CommandHandler("unstuck", AccessLevel.Player, CommandHandlerFlag.None, 0,
-            "Attempts to unstuck a player",
+        [CommandHandler("pktop", AccessLevel.Player, CommandHandlerFlag.None, 0,
+            "shows current top pkmode levels of all players on the server",
             "")]
-        public static void HandleUnstuck(Session session, params string[] parameters)
+        public static void HandlePKtop(Session session, params string[] parameters)
         {
-            if (!session.Player.PKTimerActive)
+            var allplayers = PlayerManager.GetAllPlayers();
+
+            var storedData = new List<KeyValuePair<int, string>>();
+
+
+            foreach (var player in allplayers)
             {
-                log.Warn($"{session.Player.Name} has attempted unstuck");
-                session.Network.EnqueueSend(new GameMessageSystemChat($"Please wait 1 minute for the process. Teleporting to where the server thinks you are...(hopefully)", ChatMessageType.Broadcast));
-                var currentPos = new Position(session.Player.Location);
-                session.Player.Teleport(session.Player.Location);
-                session.Player.SetPosition(PositionType.TeleportedCharacter, currentPos);
-
-                var actionChain = new ActionChain();
-                actionChain.AddDelaySeconds(57.0f);
-                actionChain.AddAction(session.Player, () =>
+                if (player.PkModeStoredLevel != null)
                 {
-                    session.LogOffPlayer(true);
-                    session.Network.EnqueueSend(new GameMessageSystemChat($"Forcing Log out.", ChatMessageType.Broadcast));
-                });
-                actionChain.AddDelaySeconds(3.0f);
-                actionChain.AddAction(session.Player, () =>
-                {
-                    //string specifiedReason = "commandunstuck";
-                    session.Player.SavePlayerToDatabase();
-                    PlayerManager.SwitchPlayerFromOnlineToOffline(session.Player);
-                    //session.Terminate(SessionTerminationReason.PacketHeaderDisconnect, new GameMessageBootAccount(session, specifiedReason), null, specifiedReason);
-                    //session.Network.EnqueueSend(new GameMessageSystemChat($"Ending Session.", ChatMessageType.Broadcast));
-                });
-                actionChain.EnqueueChain();
+                    storedData.Add(new KeyValuePair<int, string>((int)player.PkModeStoredLevel, player.Name));
+                }
 
+                storedData = storedData.OrderByDescending(x => x.Key).ToList();
+
+                if (storedData.Count > 5)
+                    storedData.RemoveAt(storedData.Count - 1);
+            }
+
+            session.Network.EnqueueSend(new GameMessageSystemChat($"TOP PK LEVELS.", ChatMessageType.Broadcast));
+            session.Network.EnqueueSend(new GameMessageSystemChat($"-----------------------------", ChatMessageType.Broadcast));
+            foreach (KeyValuePair<int, string> a in storedData)
+            {
+                session.Network.EnqueueSend(new GameMessageSystemChat($"PKLevel : {a.Key}, Player : {a.Value}", ChatMessageType.Broadcast));
+            }
+            session.Network.EnqueueSend(new GameMessageSystemChat($"-----------------------------", ChatMessageType.Broadcast));
+
+        }
+
+        [CommandHandler("pkmode", AccessLevel.Player, CommandHandlerFlag.RequiresWorld,
+            "Toggle Between Pk Mode and not Pk Mode",
+            "")]
+        public static void HandlePkMode(Session session, params string[] parameters)
+        {
+            var trophies = session.Player.GetInventoryItemsOfWCID(60002);
+            int stacksizes = 0;
+
+            var trophyarray = trophies.ToArray();
+
+            foreach (var item in trophyarray)
+            {
+                stacksizes += (int)item.StackSize;
+            }
+
+            if (session.Player.Level < 200 && !session.Player.PKMode)
+                session.Network.EnqueueSend(new GameMessageSystemChat($"You do not meet the requirements to use this command yet.", ChatMessageType.Broadcast));
+            else
+            {
+                if (Time.GetUnixTime() < session.Player.GetProperty(PropertyFloat.PkModeTimer) && session.Player.GetProperty(PropertyFloat.PkModeTimer) != null)
+                    session.Network.EnqueueSend(new GameMessageSystemChat($"You have switched between PKMode and Non-PKMode too fast. You must wait 5 minutes between each usage of the command.", ChatMessageType.Broadcast));
+                else
+                {
+                    if (stacksizes < 24 && !session.Player.PKMode && !session.Player.PKMode)
+                        session.Network.EnqueueSend(new GameMessageSystemChat($"You do not have enough PK Trophies in your inventory to enter PKMode. You have {stacksizes}, you need 25 or more.", ChatMessageType.Magic));
+                    else
+                    {
+                        
+                        if (session.Player.PKTimerActive)
+                            session.Network.EnqueueSend(new GameMessageSystemChat($"You have been involved in a pk battle too recently to use this command", ChatMessageType.Magic));
+                        else
+                        {
+                            if (parameters.Length == 0)
+                            {
+                                session.Network.EnqueueSend(new GameMessageSystemChat($"You need to specify if pk mode is on or off ie. /pkmode on or /pkmode off", ChatMessageType.Broadcast));
+                            }
+                            else if (parameters[0].Equals("on", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (session.Player.PKMode == true)
+                                    session.Network.EnqueueSend(new GameMessageSystemChat($"You are already in PKMode", ChatMessageType.Broadcast));
+                                else
+                                {
+                                    if (stacksizes > 24)
+                                    {
+                                        //consumes pk trophies and sets timer.
+                                        session.Player.TryConsumeFromInventoryWithNetworking(60002, 25);
+                                        session.Player.SetProperty(PropertyFloat.PKModeDuration, Time.GetFutureUnixTime(3600));
+                                    }
+                                    else
+                                    {
+                                        session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot enter PKMode without the proper amount of PK Trophies.", ChatMessageType.Broadcast));
+                                        return;
+                                    }
+
+                                    PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[PKMODE] {session.Player.Name} has entered PKMode!", ChatMessageType.Tell));
+
+                                    session.Player.SetProperty(PropertyBool.PKMode, true);
+
+                                    //stores current non-pkmode values
+                                    session.Player.NonPkModeStoredTotalExperience = session.Player.TotalExperience;
+                                    session.Player.NonPkModeStoredLevel = session.Player.Level;
+                                    session.Player.NonPkModeStoredAvailableExperience = session.Player.AvailableExperience;
+                                    session.Player.NonPkModeStoredDelevelXP = session.Player.DelevelXp;
+                                    session.Player.NonPkModeStoredAvailableCredits = session.Player.AvailableSkillCredits;
+
+                                    //updates to pk-mode values
+                                    if (session.Player.PkModeStoredLevel == null) // handles first toggle   ---> LEVEL
+                                    {
+                                        session.Player.UpdateProperty(session.Player, PropertyInt.Level, 1);
+                                        session.Player.UpdateProperty(session.Player, PropertyInt.DeathLevel, 1);
+                                    }
+                                    else
+                                    {
+                                        session.Player.UpdateProperty(session.Player, PropertyInt.Level, session.Player.PkModeStoredLevel);
+                                        session.Player.UpdateProperty(session.Player, PropertyInt.DeathLevel, session.Player.PkModeStoredLevel);
+                                    }
+
+                                    if (session.Player.PkModeStoredTotalExperience == null) // handles first toggle   ----> TOTAL EXP
+                                        session.Player.UpdateProperty(session.Player, PropertyInt64.TotalExperience, 0);
+                                    else
+                                        session.Player.UpdateProperty(session.Player, PropertyInt64.TotalExperience, session.Player.PkModeStoredTotalExperience);
+
+                                    if (session.Player.GetProperty(PropertyInt.PkModeStoredPkDmgRating) == null) // PKratings are generally 0 as theres no current way to get them.
+                                        session.Player.PKDamageRating = 0;
+                                    else
+                                        session.Player.UpdateProperty(session.Player, PropertyInt.PKDamageRating, session.Player.PkModeStoredPkDmgRating);
+
+                                    if (session.Player.GetProperty(PropertyInt.PkModeStoredPkDmgRedRating) == null) // PKratings are generally 0 as theres no current way to get them.
+                                        session.Player.PKDamageResistRating = 0;
+                                    else
+                                        session.Player.UpdateProperty(session.Player, PropertyInt.PKDamageResistRating, session.Player.PkModeStoredPkDmgRedRating);
+
+                                    // ALWAYS SETS AVAILABLE XP TO 0 for PKMODE as you never gain available xp in this mode.
+                                    session.Player.UpdateProperty(session.Player, PropertyInt64.AvailableExperience, 0);
+
+                                    // sets credits to 0 as you cant train skills in this mode
+                                    session.Player.UpdateProperty(session.Player, PropertyInt.AvailableSkillCredits, 0);
+
+                                    // ALWAYS SETS DELEVEL TO 0 for PKMODE
+                                    session.Player.SetProperty(PropertyInt64.DelevelXp, 0);
+
+                                    session.Player.EnqueueBroadcast(new GameMessageScript(session.Player.Guid, PlayScript.AttribUpRed, 1));
+
+                                    session.Network.EnqueueSend(new GameMessageSystemChat($"PKMode is {(session.Player.PKMode ? "enabled" : "disabled")} You do not gain spendable XP in this mode, and you cannot train or specialize skills. Do /pkmode off after 5 minutes to return to normal.", ChatMessageType.Advancement));
+                                    session.Player.SetProperty(PropertyFloat.PkModeTimer, Time.GetFutureUnixTime(300));
+                                }
+                            }
+                            else if (parameters[0].Equals("off", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (session.Player.PKMode == false)
+                                    session.Network.EnqueueSend(new GameMessageSystemChat($"You are already in Non-PKMode", ChatMessageType.Broadcast));
+                                else
+                                {
+                                    session.Player.SetProperty(PropertyBool.PKMode, false);
+
+                                    //stores current pkmode values
+                                    session.Player.PkModeStoredTotalExperience = session.Player.TotalExperience;
+                                    session.Player.PkModeStoredLevel = session.Player.Level;
+                                    session.Player.PkModeStoredAvailableExperience = session.Player.AvailableExperience;
+                                    session.Player.PkModeStoredDelevelXP = session.Player.DelevelXp;
+                                    session.Player.PkModeStoredPkDmgRating = session.Player.PKDamageRating;
+                                    session.Player.PkModeStoredPkDmgRedRating = session.Player.PKDamageResistRating;
+
+                                    //updates to non-pkmode values
+
+                                    session.Player.UpdateProperty(session.Player, PropertyInt.Level, session.Player.NonPkModeStoredLevel);
+
+                                    session.Player.UpdateProperty(session.Player, PropertyInt.DeathLevel, session.Player.NonPkModeStoredLevel);
+
+                                    session.Player.UpdateProperty(session.Player, PropertyInt64.TotalExperience, session.Player.NonPkModeStoredTotalExperience);
+
+                                    session.Player.UpdateProperty(session.Player, PropertyInt64.AvailableExperience, session.Player.NonPkModeStoredAvailableExperience);
+
+                                    session.Player.UpdateProperty(session.Player, PropertyInt64.DelevelXp, session.Player.NonPkModeStoredDelevelXP);
+
+                                    session.Player.UpdateProperty(session.Player, PropertyInt.AvailableSkillCredits, session.Player.NonPkModeStoredAvailableCredits);
+
+                                    session.Player.UpdateProperty(session.Player, PropertyInt.PKDamageRating, 0);
+
+                                    session.Player.UpdateProperty(session.Player, PropertyInt.PKDamageResistRating, 0);
+
+                                    session.Player.EnqueueBroadcast(new GameMessageScript(session.Player.Guid, PlayScript.AttribDownRed, 1));
+
+                                    session.Network.EnqueueSend(new GameMessageSystemChat($"PKMode is {(session.Player.PKMode ? "enabled" : "disabled")} and you have returned back to normal leveling mode.", ChatMessageType.Broadcast));
+                                    session.Player.SetProperty(PropertyFloat.PkModeTimer, Time.GetFutureUnixTime(300));
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -77,13 +229,19 @@ namespace ACE.Server.Command.Handlers
                 if (parameters.Length == 0)
                 {
                     session.Player.XpShow = !session.Player.XpShow;
+
+                    if (session.Player.GetProperty(PropertyBool.XpShow) == false)
+                        session.Player.UpdateProperty(session.Player, PropertyBool.XpShow, true);
+                    else
+                        session.Player.UpdateProperty(session.Player, PropertyBool.XpShow, false);
+
                     session.Network.EnqueueSend(new GameMessageSystemChat($"Live XP display is {(session.Player.XpShow ? "enabled" : "disabled")}", ChatMessageType.Broadcast));
                 }
                 else
                 {
                     if (parameters[0].Equals("on", StringComparison.OrdinalIgnoreCase))
                     {
-                        session.Player.XpShow = true;
+                        session.Player.UpdateProperty(session.Player, PropertyBool.XpShow, true);
                         session.Network.EnqueueSend(new GameMessageSystemChat($"Live XP display is {(session.Player.XpShow ? "enabled" : "disabled")}", ChatMessageType.Broadcast));
                     }
                     else if (parameters[0].Equals("check", StringComparison.OrdinalIgnoreCase))
@@ -101,7 +259,7 @@ namespace ACE.Server.Command.Handlers
                     }
                     else if (parameters[0].Equals("off", StringComparison.OrdinalIgnoreCase))
                     {
-                        session.Player.XpShow = false;
+                        session.Player.UpdateProperty(session.Player, PropertyBool.XpShow, false);
                         session.Network.EnqueueSend(new GameMessageSystemChat($"Live XP display is {(session.Player.XpShow ? "enabled" : "disabled")}", ChatMessageType.Broadcast));
                     }
                 }

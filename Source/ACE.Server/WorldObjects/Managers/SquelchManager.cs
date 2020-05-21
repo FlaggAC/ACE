@@ -48,18 +48,19 @@ namespace ACE.Server.WorldObjects.Managers
         {
             switch (channel)
             {
-                case ChatMessageType.Speech:
-                case ChatMessageType.Tell:
+                case ChatMessageType.Spellcasting:
                 case ChatMessageType.Combat:
                 case ChatMessageType.Magic:
+                case ChatMessageType.Recall:
+                    return false;
+                case ChatMessageType.Speech:
+                case ChatMessageType.Tell:             
                 case ChatMessageType.Emote:
-                case ChatMessageType.Appraisal:
-                case ChatMessageType.Spellcasting:
+                case ChatMessageType.Appraisal:                
                 case ChatMessageType.Allegiance:
                 case ChatMessageType.Fellowship:
                 case ChatMessageType.CombatEnemy:
-                case ChatMessageType.CombatSelf:
-                case ChatMessageType.Recall:
+                case ChatMessageType.CombatSelf:                
                 case ChatMessageType.Craft:
                 case ChatMessageType.Salvaging:
 

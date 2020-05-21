@@ -10,6 +10,21 @@ namespace ACE.Common
         public uint Port { get; set; }
 
         /// <summary>
+        /// Up to 10 banned ip's in config.
+        /// </summary>
+        public string BannedIP { get; set; }
+        public string BannedIP2 { get; set; }
+        public string BannedIP3 { get; set; }
+        public string BannedIP4 { get; set; }
+        public string BannedIP5 { get; set; }
+        public string BannedIP6 { get; set; }
+        public string BannedIP7 { get; set; }
+        public string BannedIP8 { get; set; }
+        public string BannedIP9 { get; set; }
+        public string BannedIP10 { get; set; }
+
+
+        /// <summary>
         /// Increasing this setting will allow more Accounts to connect with this server.
         /// </summary>
         /// <remarks>

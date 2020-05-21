@@ -583,7 +583,14 @@ namespace ACE.Server.Managers
                 ("vendor_unique_rot_time", new Property<double>(300, "the number of seconds before unique items sold to vendors disappear")),
                 ("vitae_penalty", new Property<double>(0.05, "the amount of vitae penalty a player gets per death")),
                 ("vitae_penalty_max", new Property<double>(0.40, "the maximum vitae penalty a player can have")),
-                ("xp_modifier", new Property<double>(1.0, "scales the amount of xp received by players"))
+                ("xp_modifier", new Property<double>(1.0, "scales the amount of xp received by players")),
+                ("spell_damage_modifier", new Property<double>(1.0, "Globally Scales Projectile magics damage for PVP")),
+                ("void_spell_damage_modifier", new Property<double>(1.0, "Scales void Projectile magics damage for PVP")),
+                ("war_spell_damage_modifier", new Property<double>(1.0, "Scales void Projectile magics damage for PVP")),
+                ("life_spell_damage_modifier", new Property<double>(1.0, "Scales life Projectile magics damage for PVP")),
+                ("war_streak_spell_damage_modifier", new Property<double>(1.0, "Scales war streak Projectile magics damage for PVP")),
+                ("lotto_hollow_scaler", new Property<double>(1.0, "scales hollow lotto procs")),
+                ("void_streak_spell_damage_modifier", new Property<double>(1.0, "Scales void streak Projectile magics damage for PVP"))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<string>> DefaultStringProperties =

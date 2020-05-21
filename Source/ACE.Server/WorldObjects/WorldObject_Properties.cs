@@ -898,6 +898,9 @@ namespace ACE.Server.WorldObjects
             if (MaterialType == null)
                 return name;
 
+            if (MaterialType > ACE.Entity.Enum.MaterialType.Teak)
+                return name;
+
             var material = RecipeManager.GetMaterialName(MaterialType ?? 0);
 
             return $"{material} {name}";
@@ -2871,6 +2874,12 @@ namespace ACE.Server.WorldObjects
         {
             get => GetProperty(PropertyFloat.TrophyTimer);
             set { if (!value.HasValue) RemoveProperty(PropertyFloat.TrophyTimer); else SetProperty(PropertyFloat.TrophyTimer, value.Value); }
+        }
+
+        public long BottleXp
+        {
+            get => GetProperty(PropertyInt64.BottleXp) ?? 0;
+            set { if (value == 0) RemoveProperty(PropertyInt64.BottleXp); else SetProperty(PropertyInt64.BottleXp, value); }
         }
 
         public double? MaximumVelocity

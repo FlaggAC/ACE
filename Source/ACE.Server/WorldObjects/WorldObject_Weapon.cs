@@ -641,7 +641,7 @@ namespace ACE.Server.WorldObjects
             return criticalStrikeMod;
         }
 
-        public static float MaxCripplingBlowMod = 6.0f;
+        public static float MaxCripplingBlowMod = 4.0f; // old 6.0
 
         public static float GetCripplingBlowMod(CreatureSkill skill)
         {
@@ -663,13 +663,13 @@ namespace ACE.Server.WorldObjects
             switch(GetImbuedSkillType(skill))
             {
                 case ImbuedSkillType.Melee:
-                    baseMod = Math.Max(0, baseSkill - 40) / 60.0f;
+                    baseMod = Math.Max(0, baseSkill - 40) / 90.0f; // 4x
                     break;
 
                 case ImbuedSkillType.Missile:
                 case ImbuedSkillType.Magic:
 
-                    baseMod = baseSkill / 60.0f;
+                    baseMod = baseSkill / 90.0f; // old 60 = 6x, 90 = 4x
                     break;
             }
 
@@ -681,7 +681,7 @@ namespace ACE.Server.WorldObjects
         }
 
         // elemental rending cap, equivalent to level 6 vuln
-        public static float MaxRendingMod = 2.5f;
+        public static float MaxRendingMod = 2.5f; // 2.5f = 150%? 1.0(base) + 1.5 = 2.5 in order to reach level 7, you need to add 0.35f -- aka 2.85f
 
         public static float GetRendingMod(CreatureSkill skill)
         {

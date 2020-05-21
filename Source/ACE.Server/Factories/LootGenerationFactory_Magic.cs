@@ -96,7 +96,7 @@ namespace ACE.Server.Factories
                 return wo;
             }
 
-            if (tier == 7)
+            if (tier == 9)
             {
                 // According to wiki, Tier 7 has a chance for level 8 spell components or level 7 spell scrolls
                 // No indication of weighting in either direction, so assuming a 50/50 split
@@ -132,7 +132,7 @@ namespace ACE.Server.Factories
             return wo;
         }
 
-        private static int CreateLevel8SpellComp()
+        public static int CreateLevel8SpellComp()
         {
             int upperLimit = LootTables.Level8SpellComps.Length - 1;
             int chance = ThreadSafeRandom.Next(0, upperLimit);

@@ -661,7 +661,18 @@ namespace ACE.Server.WorldObjects
                             var wo = rNode.TryGetWorldObject();
 
                             if (wo is Creature creature && !creature.IsDead)
-                                creature.Smite(this, true);
+                            {
+                                if (creature.IsElite)
+                                {
+                                    creature.SplitMod = false;
+                                    creature.DiscoMod = false;
+                                    creature.IsRare = false;
+                                    creature.Smite(this, true);
+                                    // creature.DeleteObject(creature); 
+                                }
+                                else
+                                    creature.Smite(this, true);
+                            }
                         }
 
                         generator.Spawned.Clear();

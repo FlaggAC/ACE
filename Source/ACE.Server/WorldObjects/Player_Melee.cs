@@ -5,6 +5,7 @@ using ACE.Entity.Enum;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
 using ACE.Server.Network.GameEvent.Events;
+using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Physics;
 using ACE.Server.Physics.Animation;
 
@@ -299,22 +300,31 @@ namespace ACE.Server.WorldObjects
                         return;
                     }
 
-                    var damageEvent = DamageTarget(creature, weapon);
 
-                    // handle target procs
-                    if (damageEvent != null && damageEvent.HasDamage && !targetProc)
+                    if (creature.Warded && creature.TogglePhys)
                     {
-                        TryProcEquippedItems(creature, false);
-                        targetProc = true;
+                        Session.Network.EnqueueSend(new GameMessageSystemChat($"{creature.Name} resists your attack completely", ChatMessageType.CombatEnemy));
+                        return;
                     }
-
-                    if (weapon != null && weapon.IsCleaving)
+                    else
                     {
-                        var cleave = GetCleaveTarget(creature, weapon);
-                        foreach (var cleaveHit in cleave)
-                            DamageTarget(cleaveHit, weapon);
+                        var damageEvent = DamageTarget(creature, weapon);
 
-                        // target procs don't happen for cleaving
+                        // handle target procs
+                        if (damageEvent != null && damageEvent.HasDamage && !targetProc)
+                        {
+                            TryProcEquippedItems(creature, false);
+                            targetProc = true;
+                        }
+
+                        if (weapon != null && weapon.IsCleaving)
+                        {
+                            var cleave = GetCleaveTarget(creature, weapon);
+                            foreach (var cleaveHit in cleave)
+                                DamageTarget(cleaveHit, weapon);
+
+                            // target procs don't happen for cleaving
+                        }
                     }
                 });
 

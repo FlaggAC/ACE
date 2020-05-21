@@ -30,7 +30,23 @@ namespace ACE.Entity.Enum.Properties
         [ServerOnly]
         AllegianceXPReceived  = 9002,
         [ServerOnly]
-        VerifyXp              = 9003
+        VerifyXp              = 9003,
+        [ServerOnly]
+        DelevelXp             = 9050,
+        [ServerOnly]
+        BottleXp              = 9051,
+        [ServerOnly]
+        NonPkModeStoredTotalExperience = 9052,
+        [ServerOnly]
+        PkModeStoredTotalExperience = 9053,
+        [ServerOnly]
+        NonPkModeStoredDelevelXP = 9054,
+        [ServerOnly]
+        PkModeStoredDelevelXP = 9055,
+        [ServerOnly]
+        NonPkModeStoredAvailableExperience = 9056,
+        [ServerOnly]
+        PkModeStoredAvailableExperience = 9057
     }
 
     public static class PropertyInt64Extensions

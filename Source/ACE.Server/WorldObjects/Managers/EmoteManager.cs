@@ -18,7 +18,7 @@ using ACE.Server.Factories;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
-
+using ACE.Server.Network.Structure;
 using log4net;
 
 using Position = ACE.Entity.Position;
@@ -1134,7 +1134,7 @@ namespace ACE.Server.WorldObjects.Managers
 
                     questTarget = GetQuestTarget((EmoteType)emote.Type, targetCreature, creature);
 
-                    if (questTarget != null)
+                    if (questTarget != null && !questTarget.IsElite)
                     {
                         var questName = emote.Message;
 
@@ -1652,6 +1652,19 @@ namespace ACE.Server.WorldObjects.Managers
 
         public void OnUse(Creature activator)
         {
+            var player = activator as Player;
+
+            if (player == null)
+                return;
+            else if (WorldObject != null)
+            {
+                if (activator.GetProperty(PropertyBool.PKMode) == true && this.WorldObject.PlayerKillerStatus == PlayerKillerStatus.RubberGlue && WorldObject != null)
+                {
+                    player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Using things is limited while in PKMode", ChatMessageType.Combat));
+                    return;
+                }
+            }
+
             ExecuteEmoteSet(EmoteCategory.Use, null, activator);
         }
 

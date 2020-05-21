@@ -20,6 +20,7 @@ namespace ACE.Server.WorldObjects
             Undef      = 0,
             Specialize = 1,
             Lower      = 2,
+            BottleXP   = 3,
         }
 
         public SkillAlterationType TypeOfAlteration
@@ -83,6 +84,12 @@ namespace ACE.Server.WorldObjects
             if (!confirmed && TypeOfAlteration == SkillAlterationType.Specialize)
             {
                 player.ConfirmationManager.EnqueueSend(new Confirmation_AlterSkill(player.Guid, Guid), $"This action will specialize your {skill.Skill.ToSentence()} skill and cost {skillBase.UpgradeCostFromTrainedToSpecialized} credits.");
+                return;
+            }
+
+            if (!confirmed && TypeOfAlteration == SkillAlterationType.BottleXP)
+            {
+                player.ConfirmationManager.EnqueueSend(new Confirmation_AlterSkill(player.Guid, Guid), $"Using this will consume your xp bottle, are you sure?");
                 return;
             }
 
@@ -171,6 +178,20 @@ namespace ACE.Server.WorldObjects
 
                     break;
 
+                case SkillAlterationType.BottleXP:
+
+                    if (BottleXp <= 0)
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your bottle has no xp in it.", ChatMessageType.Broadcast));
+                        return false;
+                    }
+                    else if (player.PKMode == true)
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot use your bottle while in PK Mode.", ChatMessageType.Broadcast));
+                        return false;
+                    }
+                    break;
+
             }
             return true;
         }
@@ -230,6 +251,17 @@ namespace ACE.Server.WorldObjects
 
                             player.TryConsumeFromInventoryWithNetworking(this, 1);
                         }
+                    }
+                    break;
+
+                case SkillAlterationType.BottleXP:
+
+                    if (BottleXp > 15000000000) // 15bil xp cap
+                        BottleXp = 15000000000;
+                    if (BottleXp > 0)
+                    {
+                        player.GrantXP(BottleXp, XpType.Bottle, ShareType.None);
+                        player.TryConsumeFromInventoryWithNetworking(this, 1);
                     }
                     break;
             }

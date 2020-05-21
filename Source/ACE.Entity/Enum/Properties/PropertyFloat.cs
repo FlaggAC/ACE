@@ -216,7 +216,23 @@ namespace ACE.Entity.Enum.Properties
         [ServerOnly]
         PCAPRecordeOmegaY              = 8017,
         [ServerOnly]
-        PCAPRecordeOmegaZ              = 8018
+        PCAPRecordeOmegaZ              = 8018,
+        [ServerOnly]
+        TrophyTime                     = 9001,
+        [ServerOnly]
+        TrophyTimer                    = 9002,
+        [ServerOnly]
+        MirrorCreationTime             = 9003,
+        [ServerOnly]
+        EliteDungeonIdleTime           = 9004,
+        [ServerOnly]
+        PkDeathCountTimer              = 9005,
+        [ServerOnly]
+        StreakTimer                    = 9006,
+        [ServerOnly]
+        PkModeTimer                    = 9007,
+        [ServerOnly]
+        PKModeDuration                 = 9008,
     }
 
     public static class PropertyFloatExtensions

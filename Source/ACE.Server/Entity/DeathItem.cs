@@ -183,9 +183,9 @@ namespace ACE.Server.Entity
                     case ItemType.Gem:
                         return DeathItemCategory.Gem;
                     case ItemType.SpellComponents:
-                        return DeathItemCategory.SpellComponent;
+                        return DeathItemCategory.None;
                     case ItemType.ManaStone:
-                        return DeathItemCategory.ManaStone;
+                        return DeathItemCategory.None;
                     case ItemType.CraftAlchemyBase:
                     case ItemType.CraftAlchemyIntermediate:
                     case ItemType.CraftCookingBase:

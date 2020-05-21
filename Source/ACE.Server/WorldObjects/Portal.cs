@@ -11,6 +11,7 @@ using ACE.Server.Entity.Actions;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
+using ACE.Common;
 
 namespace ACE.Server.WorldObjects
 {
@@ -118,7 +119,7 @@ namespace ACE.Server.WorldObjects
             if (player.Teleporting)
                 return new ActivationResult(false);
 
-            if (Destination == null)
+            if (Destination == null && WeenieClassId != 777779)
             {
                 player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Portal destination for portal ID {WeenieClassId} not yet implemented!", ChatMessageType.System));
                 return new ActivationResult(false);
@@ -135,6 +136,52 @@ namespace ACE.Server.WorldObjects
                 {
                     // You are not powerful enough to interact with that portal!
                     return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouAreNotPowerfulEnoughToUsePortal));
+                }
+
+                if (WeenieClassId == 251000 && player.Enlightenment >= 1 || WeenieClassId == 251000 && player.PKMode)
+                {                
+                        // You are too powerful to interact with that portal!
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot enter because you are enlightened or in PkMode.", ChatMessageType.System));
+                        return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouAreTooPowerfulToUsePortal));
+                    
+                }
+
+                // disallow entry if non pk
+                if (WeenieClassId == 777779 && !player.IsPK)
+                {
+                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.NonPKsMayNotUsePortal));
+                }
+
+                // picks a random location and adds as the portals destination
+                if (WeenieClassId == 777779 && player.IsPK && !player.PKTimerActive)
+                {                    
+                    var randomdrop = ThreadSafeRandom.Next(1, 8);
+
+                    if (randomdrop == 1)
+                        Destination = new Position(0x576b017f, 0, -50, 18.004999160767f, 0, 0, 0.71442097425461f, -0.69971597194672f);
+                    else if (randomdrop == 2)
+                        Destination = new Position(0x576b0182, 30, 0, 18.004999160767f, 0, 0, -0.999965f, 0.008408f);
+                    else if (randomdrop == 3)
+                        Destination = new Position(0x576b0185, 30, -70, 18.004999160767f, 0, 0, 0.020795f, -0.999784f);
+                    else if (randomdrop == 4)
+                        Destination = new Position(0x576b0186, 50, 0, 18.004999160767f, 0, 0, 1, 0);
+                    else if (randomdrop == 5)
+                        Destination = new Position(0x576b0189, 49.91189956665f, -70.45719909668f, 18.004999160767f, 0, 0, -0.006596f, -0.999978f);
+                    else if (randomdrop == 6)
+                        Destination = new Position(0x576b018c, 80, -20, 18.004999160767f, 0, 0, 0.73168897628784f, 0.68163901567459f);
+                    else if (randomdrop == 7)
+                        Destination = new Position(0x576b018d, 80, -50, 18.004999160767f, 0, 0, 0.65998297929764f, 0.75128102302551f);
+                    else if (randomdrop == 8)
+                        Destination = new Position(0x576b017e, 0, -20, 18.004999160767f, 0, 0, 0.71442097425461f, -0.69971597194672f);
+
+                    player.Session.Network.EnqueueSend(new GameMessageSystemChat($"you have been teleported to one of the random drop locations inside the Control Block Arena!", ChatMessageType.System));
+                }
+
+                // 1-100 and 150 dungeon deathcount restriction.
+                if (WeenieClassId == 251000  && player.DeathCount > 3 || WeenieClassId == 261005 && player.DeathCount > 3 || WeenieClassId == 261006 && player.DeathCount > 3 || WeenieClassId == 261007 && player.DeathCount > 3 || WeenieClassId == 261008 && player.DeathCount > 3)
+                {
+                    player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have died too many times consecutively to enter this dungeon. You need to not die for 20 minutes to enter this dungeon.", ChatMessageType.System));
+                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouCanPossiblySucceed));
                 }
 
                 if (player.Level > MaxLevel && MaxLevel != 0)

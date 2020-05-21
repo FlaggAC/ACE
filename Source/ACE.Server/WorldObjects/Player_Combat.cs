@@ -147,7 +147,7 @@ namespace ACE.Server.WorldObjects
                 if (damageEvent.LifestoneProtection)
                     Session.Network.EnqueueSend(new GameMessageSystemChat($"The Lifestone's magic protects {target.Name} from the attack!", ChatMessageType.Magic));
 
-                else if (!SquelchManager.Squelches.Contains(target, ChatMessageType.CombatSelf))
+                //else if (!SquelchManager.Squelches.Contains(target, ChatMessageType.CombatSelf))
                     Session.Network.EnqueueSend(new GameEventEvasionAttackerNotification(Session, target.Name));
 
                 if (targetPlayer != null)
@@ -159,7 +159,7 @@ namespace ACE.Server.WorldObjects
                 // notify attacker
                 var intDamage = (uint)Math.Round(damageEvent.Damage);
 
-                if (!SquelchManager.Squelches.Contains(this, ChatMessageType.CombatSelf))
+                //if (!SquelchManager.Squelches.Contains(this, ChatMessageType.CombatSelf))
                     Session.Network.EnqueueSend(new GameEventAttackerNotification(Session, target.Name, damageEvent.DamageType, (float)intDamage / target.Health.MaxValue, intDamage, damageEvent.IsCritical, damageEvent.AttackConditions));
 
                 // splatter effects
@@ -321,7 +321,7 @@ namespace ACE.Server.WorldObjects
                 //UpdateVitalDelta(Stamina, -1);
             }
 
-            if (!SquelchManager.Squelches.Contains(attacker, ChatMessageType.CombatEnemy))
+            //if (!SquelchManager.Squelches.Contains(attacker, ChatMessageType.CombatEnemy))
                 Session.Network.EnqueueSend(new GameEventEvasionDefenderNotification(Session, attacker.Name));
 
             var creature = attacker as Creature;
@@ -499,7 +499,7 @@ namespace ACE.Server.WorldObjects
             // send network messages
             if (source is Creature creature)
             {
-                if (!SquelchManager.Squelches.Contains(source, ChatMessageType.CombatEnemy))
+                //if (!SquelchManager.Squelches.Contains(source, ChatMessageType.CombatEnemy))
                     Session.Network.EnqueueSend(new GameEventDefenderNotification(Session, creature.Name, damageType, percent, amount, damageLocation, crit, attackConditions));
 
                 var hitSound = new GameMessageSound(Guid, GetHitSound(source, bodyPart), 1.0f);

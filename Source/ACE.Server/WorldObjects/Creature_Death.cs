@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using ACE.Common;
 using ACE.Database;
 using ACE.Database.Models.World;
 using ACE.Entity;
@@ -15,12 +15,14 @@ using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 
+
 namespace ACE.Server.WorldObjects
 {
     partial class Creature
     {
         public TreasureDeath DeathTreasure { get => DeathTreasureType.HasValue ? DatabaseManager.World.GetCachedDeathTreasure(DeathTreasureType.Value) : null; }
-
+        public bool Enltrophy = false;
+        
         /// <summary>
         /// Called when a monster or player dies, in conjunction with Die()
         /// </summary>
@@ -84,12 +86,332 @@ namespace ACE.Server.WorldObjects
             if (topDamager != null)
             {
                 KillerId = topDamager.Guid.Full;
+                var killer = topDamager.TryGetAttacker() as Player;
 
                 if (topDamager.IsPlayer)
                 {
                     var topDamagerPlayer = topDamager.TryGetAttacker();
                     if (topDamagerPlayer != null)
                         topDamagerPlayer.CreatureKills = (topDamagerPlayer.CreatureKills ?? 0) + 1;
+
+                    
+
+                    if (killer != null && CreatureType == ACE.Entity.Enum.CreatureType.Drudge && Level <= 80)
+                    {
+                        var packslots = killer.GetFreeInventorySlots();
+                        var lessergreaterdrudgeslaying = WorldObjectFactory.CreateNewWorldObject("lessergreaterdrudgeslaying");
+                        
+
+                        if (killer.LowDrudgeSlayerCount >= ThreadSafeRandom.Next(200, 1000))
+                        {               
+
+                            var slayerng = ThreadSafeRandom.Next(1, 10);
+
+                            if (slayerng <= 6) // %60 for Lesser Lesser
+                            {
+                                var lesserlesserdrudgeslaying = WorldObjectFactory.CreateNewWorldObject("lesserlesserdrudgeslaying");
+                                
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.TryCreateInInventoryWithNetworking(lesserlesserdrudgeslaying);
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Lesser Lesser Gem of Drudge Slaying", ChatMessageType.Broadcast));                                    
+                                }
+
+                            }
+                            else if (slayerng >= 7 && slayerng <= 9) // 20% For Normal Lesser
+                            {
+                                var lesserdrudgeslaying = WorldObjectFactory.CreateNewWorldObject("lesserdrudgeslaying");
+
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.TryCreateInInventoryWithNetworking(lesserdrudgeslaying);
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Lesser Gem of Drudge Slaying", ChatMessageType.Broadcast));                                    
+                                }                               
+                            }
+                            else if (slayerng == 10) // 10% For Lesser Greater
+                            {
+                                
+
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.TryCreateInInventoryWithNetworking(lessergreaterdrudgeslaying);
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Lesser Greater Gem of Drudge Slaying", ChatMessageType.Broadcast));                                    
+                                }                              
+                            }
+
+                            if (packslots < 1)
+                            {
+                                killer.LowDrudgeSlayerCount = killer.LowDrudgeSlayerCount;
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You retain your kill count... Make space in your inventory!", ChatMessageType.Broadcast));
+                            }
+                            else
+                            {
+                                killer.LowDrudgeSlayerCount = 0;
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your knowledge of Drudge's has increased subtantially, you feel that you know enough to kill them more effectively.", ChatMessageType.Broadcast));
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You manifest this power into a gem into your inventory", ChatMessageType.Broadcast));
+                            }                            
+                            //killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Lesser Gem of Drudge Slaying", ChatMessageType.Broadcast));
+                        }
+                        else
+                        {                  
+
+                            killer.LowDrudgeSlayerCount++;
+                        }
+                    } // LESSER DRUDGE SLAYER (Drudges level 80 or less)
+
+                    if (killer != null && CreatureType == ACE.Entity.Enum.CreatureType.Drudge && Level >= 100 && Level <= 135)
+                    {
+                        var packslots = killer.GetFreeInventorySlots();
+
+                        if (killer.MidDrudgeSlayerCount >= ThreadSafeRandom.Next(1000, 2000))
+                        {
+                            killer.MidDrudgeSlayerCount = 0;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your knowledge of Drudge's has increased subtantially, you feel that you know enough to kill them more effectively.", ChatMessageType.Broadcast));
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You manifest this power into a gem into your inventory", ChatMessageType.Broadcast));
+                            //killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Lesser Gem of Drudge Slaying", ChatMessageType.Broadcast));
+
+                            var slayerng = ThreadSafeRandom.Next(1, 10);
+
+                            if (slayerng <= 6) // %50 for Lesser Lesser
+                            {
+                                var moderatelesserdrudgeslaying = WorldObjectFactory.CreateNewWorldObject("moderatelesserdrudgeslaying");
+
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Moderate Lesser Gem of Drudge Slaying", ChatMessageType.Broadcast));
+                                    killer.TryCreateInInventoryWithNetworking(moderatelesserdrudgeslaying);
+                                }
+
+                                    
+                            }
+                            else if (slayerng >= 7 && slayerng <= 9) // 30% For Normal Lesser
+                            {
+                                var moderatedrudgeslaying = WorldObjectFactory.CreateNewWorldObject("moderatedrudgeslaying");
+
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Moderate Gem of Drudge Slaying", ChatMessageType.Broadcast));
+                                    killer.TryCreateInInventoryWithNetworking(moderatedrudgeslaying);
+                                }
+                                    
+                            }
+                            else if (slayerng == 10) // 10% For Lesser Greater
+                            {
+                                var moderategreaterdrudgeslaying = WorldObjectFactory.CreateNewWorldObject("moderategreaterdrudgeslaying");
+
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Moderate Greater Gem of Drudge Slaying", ChatMessageType.Broadcast));
+                                    killer.TryCreateInInventoryWithNetworking(moderategreaterdrudgeslaying);
+                                }                                    
+                            }
+
+                            if (packslots < 1)
+                            {
+                                killer.MidDrudgeSlayerCount = killer.MidDrudgeSlayerCount;
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You retain your kill count... Make space in your inventory!", ChatMessageType.Broadcast));
+                            }
+                            else
+                            {
+                                killer.MidDrudgeSlayerCount = 0;
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your knowledge of Drudge's has increased subtantially, you feel that you know enough to kill them more effectively.", ChatMessageType.Broadcast));
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You manifest this power into a gem into your inventory", ChatMessageType.Broadcast));
+                            }
+                        }
+                        else
+                        {
+                            killer.MidDrudgeSlayerCount++;
+                        }
+                    } // MODERATE DRUDGE SLAYER (Drudges level 100-135)
+
+                    if (killer != null && CreatureType == ACE.Entity.Enum.CreatureType.Drudge && Level >= 160)
+                    {
+                        var packslots = killer.GetFreeInventorySlots();
+                        if (killer.HighDrudgeSlayerCount >= ThreadSafeRandom.Next(2000,5000))
+                        {
+                            killer.HighDrudgeSlayerCount = 0;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your knowledge of Drudge's has increased subtantially, you feel that you know enough to kill them more effectively.", ChatMessageType.Broadcast));
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You manifest this power into a gem into your inventory", ChatMessageType.Broadcast));
+                            //killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Lesser Gem of Drudge Slaying", ChatMessageType.Broadcast));
+
+                            var slayerng = ThreadSafeRandom.Next(1, 10);
+
+                            if (slayerng <= 6) // %50 for Lesser Lesser
+                            {
+                                var greaterlesserdrudgeslaying = WorldObjectFactory.CreateNewWorldObject("greaterlesserdrudgeslaying");
+
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Greater Lesser Gem of Drudge Slaying", ChatMessageType.Broadcast));
+                                    killer.TryCreateInInventoryWithNetworking(greaterlesserdrudgeslaying);
+                                }
+                                    
+                            }
+                            else if (slayerng >= 7 && slayerng <= 9) // 30% For Normal Lesser
+                            {
+                                var greaterdrudgeslaying = WorldObjectFactory.CreateNewWorldObject("greaterdrudgeslaying");
+
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Greater Gem of Drudge Slaying", ChatMessageType.Broadcast));
+                                    killer.TryCreateInInventoryWithNetworking(greaterdrudgeslaying);
+                                }
+
+                                    
+                            }
+                            else if (slayerng == 10) // 10% For Lesser Greater
+                            {
+                                var greatergreaterdrudgeslaying = WorldObjectFactory.CreateNewWorldObject("greatergreaterdrudgeslaying");
+
+                                if (packslots < 1)
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You dont have enough pack slots open to receive the item...", ChatMessageType.Broadcast));
+                                }
+                                else
+                                {
+                                    killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You receive a Greater Greater Gem of Drudge Slaying", ChatMessageType.Broadcast));
+                                    killer.TryCreateInInventoryWithNetworking(greatergreaterdrudgeslaying);
+                                }                                    
+                            }
+
+                            if (packslots < 1)
+                            {
+                                killer.HighDrudgeSlayerCount = killer.HighDrudgeSlayerCount;
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You retain your kill count... Make space in your inventory!", ChatMessageType.Broadcast));
+                            }
+                            else
+                            {
+                                killer.HighDrudgeSlayerCount = 0;
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your knowledge of Drudge's has increased subtantially, you feel that you know enough to kill them more effectively.", ChatMessageType.Broadcast));
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You manifest this power into a gem into your inventory", ChatMessageType.Broadcast));
+                            }
+                        }
+                        else
+                        {
+                            killer.HighDrudgeSlayerCount++;
+                        }
+                    } // GREATER DRUDGE SLAYER (Drudges level 160+)
+
+                    var trophypercentenl = ThreadSafeRandom.Next(1, 20);
+                    if (killer != null && Level >= 130)
+                    {                       
+                        if (killer.Enlightenment == 1 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 5.0f && WeenieClassId != 151001) // 1% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment == 2 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 10.0f && WeenieClassId != 151001) // 2% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment == 3 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 15.0f && WeenieClassId != 151001) // 3% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment == 4 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 20.0f && WeenieClassId != 151001) // 4% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment == 5 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 25.0f && WeenieClassId != 151001) // 5% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment == 6 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 30.0f && WeenieClassId != 151001) // 6% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment == 7 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 35.0f && WeenieClassId != 151001) // 7% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment == 8 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 40.0f && WeenieClassId != 151001) // 8% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment == 9 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 45.0f && WeenieClassId != 151001) // 9% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                        else if (killer.Enlightenment >= 10 && ThreadSafeRandom.Next(1.0f, 500.0f) <= 50.0f && WeenieClassId != 151001) // 10% on all other Mobs if Enlightened
+                        {
+                            Enltrophy = true;
+                            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your enlightened state of mind is so powerful that you generated a Pk Trophy on the monster you just killed!", ChatMessageType.Broadcast));
+                        }// 0.4% on all other Mobs if Enlightened
+                    }// Trophy Enlightenment
+
+                    /*
+                    //handles elite split mod.
+                    if (IsElite && SplitMod)
+                    {
+                        var id = WeenieClassId;
+
+                        for (var i = 0; i < 8; i++)
+                        {
+                            var splitmob = WorldObjectFactory.CreateNewWorldObject(id) as Creature;
+                            splitmob.Location = new Position(Location);
+
+                            var name = splitmob.GetProperty(PropertyString.Name);
+
+                            splitmob.Name = "Split " + name;
+                            splitmob.SetProperty(PropertyBool.IsElite, false);
+                            splitmob.SetProperty(PropertyBool.EliteTrigger, false);
+                            splitmob.SetProperty(PropertyBool.IsMini, true);
+                            splitmob.ResistAcid = 2;
+                            splitmob.ResistFire = 2;
+                            splitmob.ResistCold = 2;
+                            splitmob.ResistElectric = 2;
+                            splitmob.ResistPierce = 2;
+                            splitmob.ResistBludgeon = 2;
+                            splitmob.ResistSlash = 2;
+                            splitmob.ResistNether = 2;
+                            splitmob.ObjScale = (splitmob.ObjScale ?? 1.0f) - 0.3f;
+                            splitmob.Tolerance = Tolerance.None; // will make all mobs without tolerence immediately target something and attack
+                            splitmob.EnterWorld();
+                        }
+
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"The Elite Mob Explodes into smaller versions of itself!", ChatMessageType.Broadcast));
+                    }
+                    */
                 }
             }
 
@@ -381,7 +703,9 @@ namespace ACE.Server.WorldObjects
         private List<WorldObject> GenerateTreasure(DamageHistoryInfo killer, Corpse corpse)
         {
             var droppedItems = new List<WorldObject>();
-
+            var OnceRare = 1;
+            var OncePass = 0;
+            var OncePass2 = 0;
             // create death treasure from loot generation factory
             if (DeathTreasure != null)
             {
@@ -389,7 +713,138 @@ namespace ACE.Server.WorldObjects
                 foreach (WorldObject wo in items)
                 {
                     if (corpse != null)
+                    {
                         corpse.TryAddToInventory(wo);
+
+                        if (Enltrophy)
+                        {
+                            var amntrandom = ThreadSafeRandom.Next(1, 4);
+                            var pktrophy = WorldObjectFactory.CreateNewWorldObject("pktrophy");
+                            pktrophy.SetStackSize(amntrandom);
+                            corpse.TryAddToInventory(pktrophy);
+                            Enltrophy = false;
+                        }// enlightenment trophy drop
+
+                        if (IsRare && IsDead && OnceRare == 1)
+                        {
+                            int tier2 = 0;
+                            int tier3 = 0;
+                            int tier = 0;
+
+                            var rarenum = ThreadSafeRandom.Next(1, 3);
+
+                            //even spread % up to 3 rares
+                            if (rarenum == 1)
+                            {
+                                tier = ThreadSafeRandom.Next(1, 6);
+                                var tierRares = LootGenerationFactory.RareWCIDs[tier].ToList();
+                                var rng = ThreadSafeRandom.Next(0, tierRares.Count - 1);
+                                var rareWCID = tierRares[rng];
+                                var rare = WorldObjectFactory.CreateNewWorldObject((uint)rareWCID);
+
+                                corpse.TryAddToInventory(rare);
+
+                                EnqueueBroadcast(new GameMessageSystemChat($"{killer.Name} has killed an Elite with the rare mod, it has generated {rarenum} rare! {rare.Name}!", ChatMessageType.System));
+                            }
+                            else if (rarenum == 2)
+                            {
+                                tier = ThreadSafeRandom.Next(1, 6);
+                                var tierRares = LootGenerationFactory.RareWCIDs[tier].ToList();
+                                var rng = ThreadSafeRandom.Next(0, tierRares.Count - 1);
+                                var rareWCID = tierRares[rng];
+                                var rare = WorldObjectFactory.CreateNewWorldObject((uint)rareWCID);
+
+
+                                tier2 = ThreadSafeRandom.Next(1, 6);
+                                var tierRares2 = LootGenerationFactory.RareWCIDs[tier2].ToList();
+                                var rng2 = ThreadSafeRandom.Next(0, tierRares2.Count - 1);
+                                var rareWCID2 = tierRares2[rng2];
+                                var rare2 = WorldObjectFactory.CreateNewWorldObject((uint)rareWCID2);
+
+                                corpse.TryAddToInventory(rare);
+                                corpse.TryAddToInventory(rare2);
+
+                                EnqueueBroadcast(new GameMessageSystemChat($"{killer.Name} has killed an Elite with the rare mod, it has generated {rarenum} rares! {rare.Name}, and {rare2.Name}!", ChatMessageType.System));
+                            }
+                            else if (rarenum == 3)
+                            {
+                                tier = ThreadSafeRandom.Next(1, 5);
+                                var tierRares = LootGenerationFactory.RareWCIDs[tier].ToList();
+                                var rng = ThreadSafeRandom.Next(0, tierRares.Count - 1);
+                                var rareWCID = tierRares[rng];
+                                var rare = WorldObjectFactory.CreateNewWorldObject((uint)rareWCID);
+
+
+                                tier2 = ThreadSafeRandom.Next(1, 5);
+                                var tierRares2 = LootGenerationFactory.RareWCIDs[tier2].ToList();
+                                var rng2 = ThreadSafeRandom.Next(0, tierRares2.Count - 1);
+                                var rareWCID2 = tierRares2[rng2];
+                                var rare2 = WorldObjectFactory.CreateNewWorldObject((uint)rareWCID2);
+
+
+                                tier3 = ThreadSafeRandom.Next(1, 5);
+                                var tierRares3 = LootGenerationFactory.RareWCIDs[tier3].ToList();
+                                var rng3 = ThreadSafeRandom.Next(0, tierRares3.Count - 1);
+                                var rareWCID3 = tierRares3[rng3];
+                                var rare3 = WorldObjectFactory.CreateNewWorldObject((uint)rareWCID3);
+
+                                corpse.TryAddToInventory(rare);
+                                corpse.TryAddToInventory(rare2);
+                                corpse.TryAddToInventory(rare3);
+
+                                EnqueueBroadcast(new GameMessageSystemChat($"{killer.Name} has killed an Elite with the rare mod, it has generated {rarenum} rares! {rare.Name}, {rare2.Name}, and {rare3.Name}", ChatMessageType.System));
+                            }
+
+                            OnceRare++;
+                        }// rare mobs drop up to 3 rares                       
+
+                        if (IsElite && OncePass == 0 && Level > 99)
+                        {
+                            OncePass = 1;
+                            var fiveusemfk = WorldObjectFactory.CreateNewWorldObject("ace38920-reinforcedmanaforgekey");
+                            var amntrandom = ThreadSafeRandom.Next(1, 6);
+                            var pktrophy = WorldObjectFactory.CreateNewWorldObject("pktrophy");
+                            pktrophy.SetStackSize(amntrandom);
+                            corpse.TryAddToInventory(pktrophy);
+                            corpse.TryAddToInventory(fiveusemfk);
+                        }// Elites level 100+ will drop a reinforced manaforge key.
+
+                        if (IsElite && OncePass2 == 0 && Level > 150)
+                        {
+                            OncePass2 = 1;
+
+                            var rng1 = ThreadSafeRandom.Next(0f, 1.0f);
+                            var rng2 = ThreadSafeRandom.Next(0f, 1.0f);
+                            var rng3 = ThreadSafeRandom.Next(0f, 1.0f);
+
+                            int id = LootGenerationFactory.CreateLevel8SpellComp();
+                            var spellcomp81 = WorldObjectFactory.CreateNewWorldObject((uint)id);
+                            int id2 = LootGenerationFactory.CreateLevel8SpellComp();
+                            var spellcomp82 = WorldObjectFactory.CreateNewWorldObject((uint)id2);
+                            int id3 = LootGenerationFactory.CreateLevel8SpellComp();
+                            var spellcomp83 = WorldObjectFactory.CreateNewWorldObject((uint)id3);
+                            int id4 = LootGenerationFactory.CreateLevel8SpellComp();
+                            var spellcomp84 = WorldObjectFactory.CreateNewWorldObject((uint)id4);
+                            int id5 = LootGenerationFactory.CreateLevel8SpellComp();
+                            var spellcomp85 = WorldObjectFactory.CreateNewWorldObject((uint)id5);
+
+
+                            if (rng1 <= 1)
+                            {
+                                corpse.TryAddToInventory(spellcomp81);
+                                corpse.TryAddToInventory(spellcomp82);
+                                corpse.TryAddToInventory(spellcomp83);
+                            }// 100% for 3 comps
+                            if (rng2 <= .50)
+                            {
+                                corpse.TryAddToInventory(spellcomp84);
+                            }// 50% for 4
+                            if (rng3 <= .25)
+                            {
+                                corpse.TryAddToInventory(spellcomp85);
+                            }// 25% for 5
+                        }// elites level 150+ drop up to 5 level 8 spell comps
+                    }
                     else
                         droppedItems.Add(wo);
 

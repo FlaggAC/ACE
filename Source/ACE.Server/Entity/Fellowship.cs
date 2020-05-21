@@ -438,7 +438,14 @@ namespace ACE.Server.Entity
                 {
                     var fellowXpType = player == member ? XpType.Quest : XpType.Fellowship;
 
-                    member.GrantXP(perAmount, fellowXpType, shareType);
+                    if (member.Enlightenment >= 1)
+                    {
+                        member.GrantXP(perAmount / 10, fellowXpType, shareType);
+                    }
+                    else
+                    {
+                        member.GrantXP(perAmount, fellowXpType, shareType);
+                    }
                 }
             }
 
@@ -454,7 +461,14 @@ namespace ACE.Server.Entity
 
                     var fellowXpType = player == member ? xpType : XpType.Fellowship;
 
-                    member.GrantXP((long)shareAmount, fellowXpType, shareType);
+                    if (player.Enlightenment <= 0)
+                    {
+                        member.GrantXP((long)shareAmount, fellowXpType, shareType);
+                    }
+                    else if (player.Enlightenment >= 1)
+                    {
+                        member.GrantXP((long)shareAmount, fellowXpType, shareType);
+                    }
                 }
 
                 return;
@@ -474,7 +488,14 @@ namespace ACE.Server.Entity
 
                     var fellowXpType = player == member ? xpType : XpType.Fellowship;
 
-                    member.GrantXP((long)playerTotal, fellowXpType, shareType);
+                    if (player.Enlightenment <= 0)
+                    {
+                        member.GrantXP((long)playerTotal, fellowXpType, shareType);
+                    }
+                    else if (player.Enlightenment >= 1)
+                    {
+                        member.GrantXP((long)playerTotal, fellowXpType, shareType);
+                    }
                 }
             }
         }

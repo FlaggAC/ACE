@@ -104,12 +104,12 @@ namespace ACE.Server.WorldObjects
                 pkPlayer.PkTimestamp = Time.GetUnixTime();
                 pkPlayer.PlayerKillsPk++;
 
-                var globalPKDe = $"{lastDamager.Name} has defeated {Name}!";
+                var globalPKDe = $"[PK] {lastDamager.Name} has defeated {Name}!";
 
                 if ((Location.Cell & 0xFFFF) < 0x100)
                     globalPKDe += $" The kill occured at {Location.GetMapCoordStr()}";
 
-                globalPKDe += "\n[PKDe]";
+                //globalPKDe += "\n[PKDe]";
 
                 PlayerManager.BroadcastToAll(new GameMessageSystemChat(globalPKDe, ChatMessageType.Broadcast));
             }
@@ -153,6 +153,8 @@ namespace ACE.Server.WorldObjects
                     topDamager = topDamagerOther;
             }
 
+            log.Info($"{Name}.Die({lastDamager?.Name} ({lastDamager?.Guid}), {topDamager?.Name} ({topDamager?.Guid})) - PKDeath={IsPKDeath(topDamager)}, PKLiteDeath={IsPKLiteDeath(topDamager)}");
+
             UpdateVital(Health, 0);
             NumDeaths++;
             suicideInProgress = false;
@@ -191,8 +193,67 @@ namespace ACE.Server.WorldObjects
 
             // update vitae
             // players who died in a PKLite fight do not accrue vitae
-            if (!IsPKLiteDeath(topDamager))
+            if (!IsPKLiteDeath(topDamager) && !PKMode)
                 InflictVitaePenalty();
+
+            //first death from null
+            if (GetProperty(PropertyInt.DeathCount) == null)
+                DeathCount = 1;
+
+            //if last death was less than 20 mins and DeathCount is less than 4 then increment death count otherwise if last death took longer than 20 mins then set deathcount back to zero.
+            if (Time.GetUnixTime() < GetProperty(PropertyFloat.PkDeathCountTimer) && DeathCount <= 3)
+                DeathCount += 1;
+            else if (Time.GetUnixTime() > GetProperty(PropertyFloat.PkDeathCountTimer))
+                DeathCount = 0;
+
+            //set death timestamp 20 mins from actual death.
+            SetProperty(PropertyFloat.PkDeathCountTimer, Time.GetFutureUnixTime(1200));
+
+            // handle enlightenment
+            if (Character.CharacterPropertiesQuestRegistry.FirstOrDefault(i => i.QuestName.Equals("Trance1")) != null && !PKMode)
+            {
+
+                EnchantmentManager.RemoveVitae();
+                UpdateProperty(this, PropertyInt.Level, 1);
+                UpdateProperty(this, PropertyInt64.TotalExperience, 0);
+                UpdateProperty(this, PropertyInt64.AvailableExperience, 0);
+                SetProperty(PropertyInt64.DelevelXp, 0);
+
+                // reset skills
+                foreach (var skill in Skills.Values)
+                {
+                    skill.ExperienceSpent = 0;
+                    skill.Ranks = 0;
+
+                    Session.Network.EnqueueSend(new GameMessagePrivateUpdateSkill(this, skill));
+                }
+
+                foreach (var attribute in Attributes.Values)
+                {
+                    attribute.ExperienceSpent = 0;
+                    attribute.Ranks = 0;
+
+                    Session.Network.EnqueueSend(new GameMessagePrivateUpdateAttribute(this, attribute));
+                }
+
+                foreach (var vital in Vitals.Values)
+                {
+                    vital.ExperienceSpent = 0;
+                    vital.Ranks = 0;
+
+                    Session.Network.EnqueueSend(new GameMessagePrivateUpdateVital(this, vital));
+                }
+
+                var currentcreds = GetProperty(PropertyInt.AvailableSkillCredits);
+                UpdateProperty(this, PropertyInt.AvailableSkillCredits, currentcreds);
+
+                var enlightenment = Enlightenment + 1;
+                UpdateProperty(this, PropertyInt.Enlightenment, enlightenment);
+
+                QuestManager.Erase("Trance1"); // resets to null to allow infinite resets.
+
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"You have tranced {enlightenment} times. Congratulations. +2 Vitality, and +1 to all stats & Many other bonuses.", ChatMessageType.Broadcast));
+            }
 
             if (IsPKDeath(topDamager) || AugmentationSpellsRemainPastDeath == 0)
             {
@@ -202,6 +263,236 @@ namespace ACE.Server.WorldObjects
             }
             else
                 Session.Network.EnqueueSend(new GameMessageSystemChat("Your augmentation prevents the tides of death from ripping away your current enchantments!", ChatMessageType.Broadcast));
+
+            if (IsPKDeath(topDamager))
+            {
+                var asshole = topDamager.TryGetAttacker() as Player;
+                var pktrophy = WorldObjectFactory.CreateNewWorldObject("pktrophy");
+
+                if (Time.GetUnixTime() > TrophyTimer) // If current time is greater than Timer. Allow Trophy drop again.
+                {
+                    SetProperty(PropertyBool.Trophy, false);
+                }
+                else if (Time.GetUnixTime() < TrophyTimer) // If current time is less than Timer. Maintain restriction.
+                {
+                    SetProperty(PropertyBool.Trophy, true);
+                }
+
+                if (ThreadSafeRandom.Next(1, 4) == 1 && Level >= 75 && !Trophy) // 25% chance to spawn pk trophy on player corpses.
+                {
+                    pktrophy.Inscribable = true;
+                    pktrophy.LongDesc = $"Character {Name} defeated by {topDamager.Name}";
+                    pktrophy.Inscription = $"I have successfully slain {Name}";
+                    pktrophy.ScribeName = $"{topDamager.Name}";
+                    pktrophy.SetProperty(PropertyInt.Bonded, -1);
+                    TryCreateInInventoryWithNetworking(pktrophy);
+                    SetProperty(PropertyBool.Trophy, true); // Toggle Trophy drop off.
+                    SetProperty(PropertyFloat.TrophyTimer, Time.GetFutureUnixTime(3600)); // Set the cooldown only on trophy generation
+                }
+                else if (Trophy) // if Trophy is off then send msg to killer telling them no trophy is possible.
+                {
+                    asshole.Session.Network.EnqueueSend(new GameMessageSystemChat($"{Name} has recently generated a pk trophy. They cannot generate another until after 1 hour has passed.", ChatMessageType.Broadcast));
+                }
+
+                if (Level >= 270 && !PKMode)
+                {
+                    HandleDeleveling();
+                }
+
+                if (PKMode)
+                {
+                    var varyxp = ThreadSafeRandom.Next(-0.05f, 0.05f); // add a random range of -5% to +5%
+
+                    // a player who dies while in pkmode loses 10% of their current level base. Then adds a random number between -5% and +5% to add a more natural xp flow.
+                    LoseLevelProportionalXp(0.10 + varyxp, 1, 10000000000);
+
+                }
+
+                var killer = topDamager.TryGetAttacker() as Player;
+                if (killer != null && Level >= 75)
+                {
+                    HandleKillStreak(killer);
+                }
+
+                if (PKMode == true && killer.PKMode == true && killer != null)
+                {
+                    // checks for last login ip and create ip to try and deter self farming. Also checks for same Monarch ID
+                    if (killer.Account.LastLoginIP == Account.LastLoginIP || killer.Account.CreateIP == Account.CreateIP)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You won't gain XP killing this character.", ChatMessageType.Broadcast));
+                    else if (killer.Allegiance == Allegiance && Allegiance != null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Allegiance members cannot generate PKMode XP on kill.", ChatMessageType.Broadcast));
+                    else
+                    {
+                        // the first 10 kills go through a system to check against last login ips of the player you are killing to try and detect farming the same account. Cross referencing the victims name AND LastLoginIP
+                        // then shuffles both of them removing the oldest entry. If success will send off the verifykill bool as true and allow xp to be gained for the kill.
+                        bool verifiedkill = false;
+                        string accountIPLastLogin = Account.LastLoginIP.ToString();
+                        if (killer.PlayersKilled1 == null && killer.PlayersKilledIP1 == null)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled1, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP1, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled2 == null && killer.PlayersKilled1 != Name && killer.PlayersKilledIP1 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled2, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP2, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled3 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled3, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP3, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled4 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled4, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP4, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled5 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled5, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP5, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled6 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled6, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP6, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled7 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled7, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP7, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled8 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name
+                            && killer.PlayersKilled7 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin && killer.PlayersKilledIP7 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled8, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP8, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled9 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name
+                            && killer.PlayersKilled7 != Name && killer.PlayersKilled8 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin && killer.PlayersKilledIP7 != accountIPLastLogin && killer.PlayersKilledIP8 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled9, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP9, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else if (killer.PlayersKilled10 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name
+                            && killer.PlayersKilled7 != Name && killer.PlayersKilled8 != Name && killer.PlayersKilled9 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin && killer.PlayersKilledIP7 != accountIPLastLogin && killer.PlayersKilledIP8 != accountIPLastLogin && killer.PlayersKilledIP9 != accountIPLastLogin)
+                        {
+                            killer.SetProperty(PropertyString.PlayersKilled10, Name);
+                            killer.SetProperty(PropertyString.PlayersKilledIP10, accountIPLastLogin);
+                            verifiedkill = true;
+                        }
+                        else
+                        {
+                            if (killer.PlayersKilled10 != null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name && killer.PlayersKilled7 != Name
+                            && killer.PlayersKilled8 != Name && killer.PlayersKilled9 != Name && killer.PlayersKilled10 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin && killer.PlayersKilledIP7 != accountIPLastLogin && killer.PlayersKilledIP8 != accountIPLastLogin && killer.PlayersKilledIP9 != accountIPLastLogin && killer.PlayersKilledIP10 != accountIPLastLogin)
+                            {
+                                // name shuffle
+
+                                //empty placeholders to place proper strings into
+                                string placeholder1 = null;
+                                string placeholder2 = null;
+                                string placeholder3 = null;
+                                string placeholder4 = null;
+                                string placeholder5 = null;
+                                string placeholder6 = null;
+                                string placeholder7 = null;
+                                string placeholder8 = null;
+                                string placeholder9 = null;
+                                string placeholder10 = null;
+
+
+                                // placeholders hold actual values to avoid data erasure
+                                placeholder1 = killer.PlayersKilled10;
+                                placeholder2 = killer.PlayersKilled9;
+                                placeholder3 = killer.PlayersKilled8;
+                                placeholder4 = killer.PlayersKilled7;
+                                placeholder5 = killer.PlayersKilled6;
+                                placeholder6 = killer.PlayersKilled5;
+                                placeholder7 = killer.PlayersKilled4;
+                                placeholder8 = killer.PlayersKilled3;
+                                placeholder9 = killer.PlayersKilled2;
+                                placeholder10 = killer.PlayersKilled1;
+
+
+                                // placeholders now shuffle the names up the list
+                                killer.PlayersKilled9 = placeholder1;
+                                killer.PlayersKilled8 = placeholder2;
+                                killer.PlayersKilled7 = placeholder3;
+                                killer.PlayersKilled6 = placeholder4;
+                                killer.PlayersKilled5 = placeholder5;
+                                killer.PlayersKilled4 = placeholder6;
+                                killer.PlayersKilled3 = placeholder7;
+                                killer.PlayersKilled2 = placeholder8;
+                                killer.PlayersKilled1 = placeholder9;
+
+                                killer.PlayersKilled10 = Name;
+
+
+                                //empty placeholders to place proper strings into
+                                string placeholderIP1 = null;
+                                string placeholderIP2 = null;
+                                string placeholderIP3 = null;
+                                string placeholderIP4 = null;
+                                string placeholderIP5 = null;
+                                string placeholderIP6 = null;
+                                string placeholderIP7 = null;
+                                string placeholderIP8 = null;
+                                string placeholderIP9 = null;
+                                string placeholderIP10 = null;
+
+                                // add placeholders to hold proper values and avoid accidental data erasure
+                                placeholderIP1 = killer.PlayersKilledIP10;
+                                placeholderIP2 = killer.PlayersKilledIP9;
+                                placeholderIP3 = killer.PlayersKilledIP8;
+                                placeholderIP4 = killer.PlayersKilledIP7;
+                                placeholderIP5 = killer.PlayersKilledIP6;
+                                placeholderIP6 = killer.PlayersKilledIP5;
+                                placeholderIP7 = killer.PlayersKilledIP4;
+                                placeholderIP8 = killer.PlayersKilledIP3;
+                                placeholderIP9 = killer.PlayersKilledIP2;
+                                placeholderIP10 = killer.PlayersKilledIP1;
+
+                                // ip shuffle
+                                // carry over the proper values from placeholders and shuffle upwards in list
+                                killer.PlayersKilledIP9 = placeholderIP1;
+                                killer.PlayersKilledIP8 = placeholderIP2;
+                                killer.PlayersKilledIP7 = placeholderIP3;
+                                killer.PlayersKilledIP6 = placeholderIP4;
+                                killer.PlayersKilledIP5 = placeholderIP5;
+                                killer.PlayersKilledIP4 = placeholderIP6;
+                                killer.PlayersKilledIP3 = placeholderIP7;
+                                killer.PlayersKilledIP2 = placeholderIP8;
+                                killer.PlayersKilledIP1 = placeholderIP9;
+
+                                killer.PlayersKilledIP10 = accountIPLastLogin;
+
+                                verifiedkill = true;
+                            }
+                            else
+                            {
+                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have not met the required prerequisites to earn PKMode XP, you must seek out new targets to gain PKMode XP.", ChatMessageType.Broadcast));
+                                verifiedkill = false;
+                            }
+                        }
+
+                        if (verifiedkill)
+                        {
+                            var xpvariance = ThreadSafeRandom.Next(0.02f, 0.05f);
+
+                            killer.GrantLevelProportionalXp(xpvariance, 1, 2000000000);
+                        }
+                    }
+                }
+            }
 
             // wait for the death animation to finish
             var dieChain = new ActionChain();
@@ -274,7 +565,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public void HandleActionDie()
         {
-            if (IsDead || Teleporting)
+            /*if (IsDead || Teleporting)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
                 return;
@@ -288,7 +579,8 @@ namespace ACE.Server.WorldObjects
             if (PropertyManager.GetBool("suicide_instant_death").Item)
                 Die(new DamageHistoryInfo(this), DamageHistory.TopDamager);
             else
-                HandleSuicide(NumDeaths);
+                HandleSuicide(NumDeaths);*/
+            return;
         }
 
         private static List<string> SuicideMessages = new List<string>()
@@ -304,7 +596,7 @@ namespace ACE.Server.WorldObjects
         {
             if (!suicideInProgress || numDeaths != NumDeaths)
                 return;
-
+            /*
             if (step < SuicideMessages.Count)
             {
                 EnqueueBroadcast(new GameMessageCreatureMessage(SuicideMessages[step], Name, Guid.Full, ChatMessageType.Speech), LocalBroadcastRange);
@@ -315,7 +607,7 @@ namespace ACE.Server.WorldObjects
                 suicideChain.EnqueueChain();
             }
             else
-                Die(new DamageHistoryInfo(this), DamageHistory.TopDamager);
+                Die(new DamageHistoryInfo(this), DamageHistory.TopDamager);*/
         }
 
         public List<WorldObject> CalculateDeathItems(Corpse corpse)
@@ -460,7 +752,7 @@ namespace ACE.Server.WorldObjects
             var numCoinsDropped = GetNumCoinsDropped();
 
             var level = Level ?? 1;
-            var canDropWielded = level >= 35;
+            var canDropWielded = level >= 35 && !PKMode;
 
             // get all items in inventory
             var inventory = GetAllPossessions();
@@ -552,6 +844,11 @@ namespace ACE.Server.WorldObjects
                     continue;
                 }
 
+                if (dropItem.WeenieClassId == 60002)
+                {
+                    UpdateProperty(dropItem, PropertyInt.Bonded, 0, true);
+                }
+
                 if (!corpse.TryAddToInventory(dropItem))
                 {
                     log.Warn($"Player_Death: couldn't add item to {Name}'s corpse: {dropItem.Name}");
@@ -623,10 +920,10 @@ namespace ACE.Server.WorldObjects
 
             var level = Level ?? 1;
 
-            if (level <= 10)
+            if (level <= 10 && !PKMode)
                 return 0;
 
-            if (level >= 11 && level <= 20)
+            if (level >= 11 && level <= 20 && !PKMode)
                 return ThreadSafeRandom.Next(0, 1);
 
             // level 21+
@@ -1008,6 +1305,215 @@ namespace ACE.Server.WorldObjects
                 destroyedItems.Add(destroyItem);
             }
             return destroyedItems;
+        }
+
+        public static int GetMaxLevelLoss(int level)
+        {
+            if (level >= 200)
+                return 25;
+            else if (level >= 180)
+                return 20;
+            else if (level >= 130)
+                return 10;
+            else if (level >= 50)
+                return 5;
+            else
+                return 0;
+        }
+
+        public static int GetDelevelLevel(int level, int maxLoss)
+        {
+
+            if (level == 275)
+                return 274;
+            if (level == 274)
+                return 273;
+            if (level == 273)
+                return 272;
+            if (level == 272)
+                return 271;
+            if (level == 271)
+                return 270;
+            if (level == 270)
+                return 270;
+
+            // 50 % 5 == 0
+            // 51 % 5 == 1
+            // etc.
+            var remainder = level % maxLoss;
+
+            return Math.Max(1, level - remainder);
+        }
+
+        public void HandleDeleveling()
+        {
+            // System wont come into effect until at least level 50.
+            if (Level < 50)
+                return;
+
+            var curLevel = Level.Value;
+
+            var maxLoss = GetMaxLevelLoss(curLevel);
+            var newLevel = GetDelevelLevel(curLevel, maxLoss);
+
+            // note that a level 50 who is almost 51
+            // will still remain level 50,
+            // but will be penalized their current progress leveling to 51
+            if (curLevel != newLevel)
+            {
+                UpdateProperty(this, PropertyInt.Level, newLevel, true);
+                DeathLevel = newLevel;
+            }
+
+            // get the experience difference
+            // between newLevel and current TotalExperience
+            var curTotalXp = TotalExperience.Value;
+            var newTotalXp = (long)GetTotalXP(newLevel);
+            var xpLoss = curTotalXp - newTotalXp;
+
+            if (xpLoss > 0)
+            {
+                DelevelXp = (DelevelXp ?? 0) + xpLoss;
+                UpdateProperty(this, PropertyInt64.TotalExperience, newTotalXp);
+            }
+
+            // send msg
+            var msg = $"You've been defeated in a PK battle and you have lost a level.";
+            Session.Network.EnqueueSend(new GameMessageSystemChat(msg, ChatMessageType.Broadcast));
+        }
+
+        public void HandleKillStreak(Player killer)
+        {
+            if (KillStreak >= 5)
+                PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[KS] {killer.Name} ended {Name}'s {KillStreak} kill streak!", ChatMessageType.Broadcast));
+
+            KillStreak = 0;
+
+            killer.KillStreak++;
+
+            string msg = null;
+            var Killed = killer.KillStreak;
+
+            if (Killed >= 2 && Killed <= 3)
+            {
+                msg = $"[KS] {killer.Name} is on a Killing Spree! [{killer.KillStreak}]";
+            }
+            else if (Killed >= 4 && Killed <= 5)
+            {
+                msg = $"[KS] {killer.Name} is on a Rampage! [{killer.KillStreak}]";
+            }
+            else if (Killed >= 6 && Killed <= 7)
+            {
+                msg = $"[KS] {killer.Name} is Dominating! [{killer.KillStreak}]";
+            }
+            else if (Killed >= 8 && Killed <= 9)
+            {
+                msg = $"[KS] {killer.Name} is Unstoppable! [{killer.KillStreak}]";
+            }
+            else if (Killed >= 10 && Killed <= 14)
+            {
+                msg = $"[KS] {killer.Name} is Godlike!! [{killer.KillStreak}]";
+            }
+            else if (Killed >= 15)
+            {
+                msg = $"[KS]{killer.Name} is Beyond Godlike!! [{killer.KillStreak}]";
+            }
+
+            if (msg != null)
+                PlayerManager.BroadcastToAll(new GameMessageSystemChat(msg, ChatMessageType.Broadcast));
+        }
+
+        public void Display(DamageHistoryInfo topDamager)
+        {
+            var killer = topDamager.TryGetAttacker() as Player;
+
+            if (killer == null)
+                return;
+
+            killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-------------------------------------------", ChatMessageType.x1B));
+            var actionChain = new ActionChain();
+            actionChain.AddDelaySeconds(0.5f);
+            actionChain.AddAction(this, () =>
+            {
+
+
+                if (killer.PlayersKilled1 != null)
+                {
+
+
+                    if (killer.PlayersKilled2 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled1} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled1}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled2 != null)
+                {
+                    if (killer.PlayersKilled3 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled2} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled2}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled3 != null)
+                {
+                    if (killer.PlayersKilled4 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled3} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled3}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled4 != null)
+                {
+                    if (killer.PlayersKilled5 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled4} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled4}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled5 != null)
+                {
+                    if (killer.PlayersKilled6 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled5} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled5}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled6 != null)
+                {
+                    if (killer.PlayersKilled7 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled6} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled6}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled7 != null)
+                {
+                    if (killer.PlayersKilled8 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled7} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled7}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled8 != null)
+                {
+                    if (killer.PlayersKilled9 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled8} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled8}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled9 != null)
+                {
+                    if (killer.PlayersKilled10 == null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled9} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled9}", ChatMessageType.System));
+                }
+                if (killer.PlayersKilled10 != null)
+                {
+                    if (killer.PlayersKilled9 != null)
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled10} [Newest]", ChatMessageType.Combat));
+                    else
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-> {killer.PlayersKilled10}", ChatMessageType.System));
+                }
+
+                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"-------------------------------------------", ChatMessageType.x1B));
+
+            });
+            actionChain.EnqueueChain();
         }
     }
 }

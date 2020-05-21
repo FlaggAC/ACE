@@ -51,6 +51,9 @@ namespace ACE.Server.Entity
         int? Gender { get; }
 
 
+        int? PkModeStoredLevel { get; }
+
+
         bool IsDeleted { get; }
         bool IsPendingDeletion { get; }
 
