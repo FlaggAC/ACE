@@ -121,20 +121,6 @@ namespace ACE.Server.WorldObjects
                     LogOut();
             }
 
-            if (Location.Landblock == 0x0174 && !PKMode)
-            {
-                if (PKTimerActive)
-                {
-                    Session.Network.EnqueueSend(new GameMessageSystemChat($"[PKMODE] You are not allowed to be in this dungeon unless you are in PKMode. You have been involved in a PK battle too recently and the adrenaline was too much!", ChatMessageType.Advancement));
-                    Die(new DamageHistoryInfo(this), DamageHistory.TopDamager);
-                }
-                else
-                {
-                    WorldManager.ThreadSafeTeleport(this, Sanctuary);
-                    Session.Network.EnqueueSend(new GameMessageSystemChat($"You must be in PKMode to remain in this dungeon.", ChatMessageType.Advancement));
-                }
-            }
-
             if (PKMode)
             {
                 var trophies = GetInventoryItemsOfWCID(60002);
