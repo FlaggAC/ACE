@@ -10,10 +10,10 @@ namespace ACE.DatLoader.Tests
     [TestClass]
     public class DatTests
     {
-        private static string cellDatLocation = @"C:\Turbine\client_cell_1.dat";
+        private static string cellDatLocation = @"C:\ACE\Dats\client_cell_1.dat";
         private static int expectedCellDatFileCount = 805003;
 
-        private static string portalDatLocation = @"C:\Turbine\client_portal.dat";
+        private static string portalDatLocation = @"C:\ACE\Dats\client_portal.dat";
         private static int expectedPortalDatFileCount = 79694; // Mag-nus.dat has 805003. Mogwais had 805348.
 
 
