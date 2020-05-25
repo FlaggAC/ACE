@@ -3,12 +3,13 @@ DELETE FROM `weenie` WHERE `class_Id` = 151002;
 INSERT INTO `weenie` (`class_Id`, `class_Name`, `type`, `last_Modified`)
 VALUES (151002, 'ace151002-golemsanctuary', 7, '2019-08-22 15:46:49') /* Portal */;
 
-INSERT INTO `weenie_properties_int` (`object_Id`, `type`, `value`)
+INSERT INTO `weenie_properties_int` (`object_Id`, `type`, `value`)  /* MinLevel */
 VALUES (151002,   1,      65536) /* ItemType - Portal */
      , (151002,  16,         32) /* ItemUseable - Remote */
      , (151002,  26,          1) /* AccountRequirements - AsheronsCall_Subscription */
+     , (151002,  86,        200) /* MinLevel */
      , (151002,  93,       3084) /* PhysicsState - Ethereal, ReportCollisions, Gravity, LightingOn */
-     , (151002, 111,         48) /* PortalBitmask - NoSummon, NoRecall */
+     , (151002, 111,         56) /* PortalBitmask - NoSummon, NoRecall, No NPK */
      , (151002, 133,          4) /* ShowableOnRadar - ShowAlways */;
 
 INSERT INTO `weenie_properties_bool` (`object_Id`, `type`, `value`)
