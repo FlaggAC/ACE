@@ -36,7 +36,7 @@ namespace ACE.GenerateSQLEnums
             Initialize();
             var files = Directory.GetFiles(@$"{SolutionPath}\ACE.Entity\Enum");
             var enumtypes = Assembly.GetAssembly(typeof(WeenieType)).GetTypes()
-                .Where(t => t.IsEnum && t.Namespace == "ACE.Entity.Enum")
+                .Where(t => t.IsEnum && t.Namespace.Contains("ACE.Entity.Enum"))
                 .ToList();
             StringBuilder sqlString = new StringBuilder();
             foreach (var enumtype in enumtypes)
