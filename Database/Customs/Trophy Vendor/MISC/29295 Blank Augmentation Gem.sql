@@ -8,7 +8,7 @@ VALUES (29295,   1,        128) /* ItemType - Misc */
      , (29295,   5,         10) /* EncumbranceVal */
      , (29295,   8,         10) /* Mass */
      , (29295,  16,          1) /* ItemUseable - No */
-     , (29295,  19,        75) /* Value */
+     , (29295,  19,        50) /* Value */
      , (29295,  33,          1) /* Bonded - Bonded */
      , (29295,  53,        101) /* PlacementPosition */
      , (29295,  93,       1044) /* PhysicsState - Ethereal, IgnoreCollisions, Gravity */
