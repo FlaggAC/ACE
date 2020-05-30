@@ -81,12 +81,6 @@ namespace ACE.Server.Physics.Animation
 
                 return true;
             }
-
-                if (collideObj.ProjectileTarget == null || collideObj.ProjectileTarget == Object)
-                    return false;
-
-                return true;
-            }
             if (Object.State.HasFlag(PhysicsState.Missile))
             {
                 if (collideObj.WeenieObj != null && collideObj.ID != TargetID)
