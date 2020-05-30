@@ -104,6 +104,7 @@ namespace ACE.Server.Command.Handlers
                             }
                             else if (parameters[0].Equals("on", StringComparison.OrdinalIgnoreCase))
                             {
+                                return; //Pk Mode has been disabled due to overwhelming dislike by the community. 
                                 if (session.Player.PKMode == true)
                                     session.Network.EnqueueSend(new GameMessageSystemChat($"You are already in PKMode", ChatMessageType.Broadcast));
                                 else
