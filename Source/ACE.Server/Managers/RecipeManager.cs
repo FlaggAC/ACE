@@ -870,6 +870,7 @@ namespace ACE.Server.Managers
                         else if (xtramodroll == 235) // 2.6%
                         {
                             // biting Strike
+                            /*
                             if (resistroll >= 1 && resistroll <= 94 && target.GetProperty(PropertyFloat.CriticalFrequency) == null)
                             {
                                 target.ElementalDamageMod += 0.01f;
@@ -883,11 +884,11 @@ namespace ACE.Server.Managers
                                 target.SetProperty(PropertyFloat.CriticalMultiplier, 1.2); // is this really 1.2x? 20%?
                                 PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[TINKERING] {player.Name} just got super lucky applying Green Garnet to their {target.NameWithMaterial}! The item now has Crushing Blow!", ChatMessageType.Broadcast));
                             }
-                            else
-                            {
+                            else*/
+                            //{
                                 target.ElementalDamageMod += 0.01f;
                                 player.Session.Network.EnqueueSend(new GameMessageSystemChat($"No mod chance roll. Better luck next time.", ChatMessageType.Broadcast));
-                            }
+                            //}
                         }// 0.3%
                         // Chance for major/epic/legendary Attributes
                         else if (xtramodroll >= 236 && xtramodroll <= 263) // 13.3%
@@ -1609,6 +1610,21 @@ namespace ACE.Server.Managers
                         // Special Properties Armor Cleave, BS, CB, ETC
                         else if (xtramodroll == 235) // 2.6%
                         {
+                            /*
+                            int procs = 0;
+                            if (target.GetProperty(PropertyBool.IgnoreMagicArmor) != null)
+                                procs++;
+                            if (target.GetProperty(PropertyBool.IgnoreMagicResist) != null)
+                                procs++;
+                            if (target.GetProperty(PropertyFloat.CriticalFrequency) != null)
+                                procs++;
+                            if (target.GetProperty(PropertyFloat.CriticalMultiplier) != null)
+                                procs++;
+                            if (target.GetProperty(PropertyInt.Cleaving) != null)
+                                procs++;
+                            if (target.GetProperty(PropertyInt.AttackType) < 32 && target.WeaponSkill != Skill.TwoHandedCombat)
+                                procs++;
+
                             //hollow properties
                             if (resistroll >= 1 && resistroll <= 30 && target.GetProperty(PropertyBool.IgnoreMagicArmor) == null)
                             {
@@ -1623,7 +1639,7 @@ namespace ACE.Server.Managers
                                 PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[TINKERING] {player.Name} just got super lucky applying iron to their {target.NameWithMaterial}! The item now has ignores partial magical protections!", ChatMessageType.Broadcast));
                             }
                             // biting Strike
-                            else if (resistroll >= 62 && resistroll <= 92 && target.GetProperty(PropertyFloat.CriticalFrequency) == null)
+                            if (resistroll >= 62 && resistroll <= 92 && target.GetProperty(PropertyFloat.CriticalFrequency) == null)
                             {
                                 target.Damage += 3;
                                 target.SetProperty(PropertyFloat.CriticalFrequency, 0.13);
@@ -1635,21 +1651,22 @@ namespace ACE.Server.Managers
                                 target.Damage += 3;
                                 target.SetProperty(PropertyFloat.CriticalMultiplier, 3);
                                 PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[TINKERING] {player.Name} just got super lucky applying iron to their {target.NameWithMaterial}! The item now has Crushing Blow!", ChatMessageType.Broadcast));
-                            }
+                            }*/
                             // cleaving
-                            else if (resistroll >= 124 && resistroll <= 154 && target.GetProperty(PropertyInt.Cleaving) < 2 && target.WeaponSkill != Skill.TwoHandedCombat)
+                            if (resistroll >= 124 && resistroll <= 154 && target.GetProperty(PropertyInt.Cleaving) < 2 && target.WeaponSkill != Skill.TwoHandedCombat)
                             {
                                 target.SetProperty(PropertyInt.Cleaving, 2);
                                 target.Damage += 3;
                                 PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[TINKERING] {player.Name} just got super lucky applying iron to their {target.NameWithMaterial}! The item now has Cleaving!", ChatMessageType.Broadcast));
                             }
                             // Multistrike
+                            /*
                             else if (resistroll >= 155 && resistroll <= 187 && target.GetProperty(PropertyInt.AttackType) < 32 && target.WeaponSkill != Skill.TwoHandedCombat)
                             {
                                 target.SetProperty(PropertyInt.AttackType, 32);
                                 target.Damage += 3;
                                 PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[TINKERING] {player.Name} just got super lucky applying iron to their {target.NameWithMaterial}! The item now has Multistrike - Double Slash", ChatMessageType.Broadcast));
-                            }                            
+                            } */                           
                             else
                             {
                                 string variancenote = null;
@@ -2567,7 +2584,7 @@ namespace ACE.Server.Managers
                         else if (xtramodroll == 235) // 2.6%
                         {
                             //Armor rend
-                            if (resistroll >= 1 && resistroll <= 61 && target.GetProperty(PropertyFloat.IgnoreArmor) != 1)
+                            /*if (resistroll >= 1 && resistroll <= 61 && target.GetProperty(PropertyFloat.IgnoreArmor) != 1)
                             {
                                 target.DamageMod += 0.04f;
                                 target.SetProperty(PropertyFloat.IgnoreArmor, 1);
@@ -2586,12 +2603,12 @@ namespace ACE.Server.Managers
                                 target.DamageMod += 0.04f;
                                 target.SetProperty(PropertyFloat.CriticalMultiplier, 3);
                                 PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[TINKERING] {player.Name} just got super lucky applying Mahogony to their {target.NameWithMaterial}! The item now has Crushing Blow!", ChatMessageType.Broadcast));
-                            }
-                            else
-                            {
+                            }*/
+                            //else
+                            //{
                                 target.DamageMod += 0.04f;
                                 player.Session.Network.EnqueueSend(new GameMessageSystemChat($"No mod chance roll. Better luck next time. New Target Damage {target.DamageMod:N2}(+4%)", ChatMessageType.Broadcast));
-                            }
+                            //}
                         }// 0.3%
                         // Chance for minor/major/epic/legendary Attributes
                         else if (xtramodroll >= 236 && xtramodroll <= 263) // 13.3%
