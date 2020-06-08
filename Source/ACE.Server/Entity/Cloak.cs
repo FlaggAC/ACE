@@ -5,8 +5,22 @@ using ACE.Server.WorldObjects;
 
 namespace ACE.Server.Entity
 {
-    public class Cloak
+    public class Cloaks
     {
+        
+        public const uint Cloak = 44840;
+        public const uint ChevronCloak = 44849;
+        public const uint ChevronInvertedCloak = 44851;
+        public const uint BorderedCloak = 44853;
+        public const uint HalvedCloak = 44854;
+        public const uint TrimmedCloak = 44856;
+        public const uint QuarteredCloak = 44857;
+        public const uint CreepingBlightCloak = 44982;
+        public const uint HouseMhoireCloak = 44983;
+        public const uint MukkirWingsCloak = 52193;
+        public const uint RynthidTentaclesCloak = 51868;
+        public const uint RynthidFieldCloak = 51867;
+
         private static readonly float ChanceMod = 2.5f;
 
         /// <summary>

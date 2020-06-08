@@ -306,6 +306,22 @@ namespace ACE.Server.Factories
             Entity.Aetheria.AetheriaRed,
         };
 
+        public static readonly HashSet<uint> CloaksWcids = new HashSet<uint>()
+        {
+            Entity.Cloaks.Cloak,
+            Entity.Cloaks.ChevronCloak,
+            Entity.Cloaks.ChevronInvertedCloak,
+            Entity.Cloaks.BorderedCloak,
+            Entity.Cloaks.HalvedCloak,
+            Entity.Cloaks.TrimmedCloak,
+            Entity.Cloaks.QuarteredCloak,
+            Entity.Cloaks.CreepingBlightCloak,
+            Entity.Cloaks.HouseMhoireCloak,
+            Entity.Cloaks.MukkirWingsCloak,
+            Entity.Cloaks.RynthidTentaclesCloak,
+            Entity.Cloaks.RynthidFieldCloak
+        };
+
         public static readonly int[,] HeavyWeaponDamageTable =
         {
                 { 26, 33, 40, 47, 54, 61, 68, 71, 74 },
@@ -1052,6 +1068,9 @@ namespace ACE.Server.Factories
             // Weakening Curse
             new int[] { 5379, 5380, 5381, 5382, 5383, 5384, 5385 }
         };
+
+        public static readonly int[] CloakSurgeSpells = { 1783, 1784, 1785, 1786, 1787, 1788, 1789, 5361, 5753, 5754, 5755, 5756 };
+            // rng select a surge spell 1783-1789 rings, 5361 void ring, 5753-5756 skill buf/dbf 
 
         public static readonly int[] WarVoidRingScrollSpells = { 1783, 1784, 1785, 1786, 1787, 1788, 1789, 5361 };
 

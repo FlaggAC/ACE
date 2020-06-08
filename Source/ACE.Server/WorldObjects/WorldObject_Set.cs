@@ -27,6 +27,73 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyInt.ItemMaxLevel); else SetProperty(PropertyInt.ItemMaxLevel, value.Value); }
         }
 
+        public int? GearDamage
+        {
+            get => GetProperty(PropertyInt.GearDamage);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearDamage); else SetProperty(PropertyInt.GearDamage, value.Value); }
+        }
+
+        public int? GearDamageResist
+        {
+            get => GetProperty(PropertyInt.GearDamageResist);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearDamageResist); else SetProperty(PropertyInt.GearDamageResist, value.Value); }
+        }
+
+        public int? GearCrit
+        {
+            get => GetProperty(PropertyInt.GearCrit);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearCrit); else SetProperty(PropertyInt.GearCrit, value.Value); }
+        }
+
+        public int? GearCritResist
+        {
+            get => GetProperty(PropertyInt.GearCritResist);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearCritResist); else SetProperty(PropertyInt.GearCritResist, value.Value); }
+        }
+
+        public int? GearCritDamage
+        {
+            get => GetProperty(PropertyInt.GearCritDamage);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearCritDamage); else SetProperty(PropertyInt.GearCritDamage, value.Value); }
+        }
+
+        public int? GearCritDamageResist
+        {
+            get => GetProperty(PropertyInt.GearCritDamageResist);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearCritDamageResist); else SetProperty(PropertyInt.GearCritDamageResist, value.Value); }
+        }
+
+        public int? GearHealingBoost
+        {
+            get => GetProperty(PropertyInt.GearHealingBoost);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearHealingBoost); else SetProperty(PropertyInt.GearHealingBoost, value.Value); }
+        }
+        public int? GearMaxHealth
+        {
+            get => GetProperty(PropertyInt.GearMaxHealth);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearMaxHealth); else SetProperty(PropertyInt.GearMaxHealth, value.Value); }
+        }
+        public int? GearPKDamageRating
+        {
+            get => GetProperty(PropertyInt.GearPKDamageRating);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearPKDamageRating); else SetProperty(PropertyInt.GearPKDamageRating, value.Value); }
+        }
+        public int? GearPKDamageResistRating
+        {
+            get => GetProperty(PropertyInt.GearPKDamageResistRating);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearPKDamageResistRating); else SetProperty(PropertyInt.GearPKDamageResistRating, value.Value); }
+        }
+        public int? GearNetherResist
+        {
+            get => GetProperty(PropertyInt.GearNetherResist);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearNetherResist); else SetProperty(PropertyInt.GearNetherResist, value.Value); }
+        }
+        public int? GearLifeResist
+        {
+            get => GetProperty(PropertyInt.GearLifeResist);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.GearLifeResist); else SetProperty(PropertyInt.GearLifeResist, value.Value); }
+        }
+
         /// <summary>
         /// The total amount of XP earned for this item
         /// </summary>

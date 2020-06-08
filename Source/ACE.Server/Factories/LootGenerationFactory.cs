@@ -147,6 +147,25 @@ namespace ACE.Server.Factories
                 }
             }
 
+
+            itemChance = ThreadSafeRandom.Next(1, 100);
+            if (itemChance <= profile.MundaneItemChance)
+            {
+                double dropRate = PropertyManager.GetDouble("cloaks_drop_rate").Item;
+                double dropRateMod = 1.0 / dropRate;
+
+                // Cloaks don't drop in loot tiers less than 5
+                if (profile.Tier > 4 && lootBias != LootBias.Weapons && dropRate > 0)
+                {
+                    if (ThreadSafeRandom.Next(1, (int)(100 * dropRateMod)) <= 2)     // base 1% to drop cloak?
+                    {
+                        lootWorldObject = CreateCloaks(profile, profile.Tier);
+                        if (lootWorldObject != null)
+                            loot.Add(lootWorldObject);
+                    }
+                }
+            }
+
             return loot;
         }
 
@@ -236,7 +255,9 @@ namespace ACE.Server.Factories
             // if this needs to be used in high performance scenarios, the collections for the loot tables will
             // will need to be updated to support o(1) queries
 
-            if (GetMutateAetheriaData(item.WeenieClassId))
+            if (GetMutateCloaksData(item.WeenieClassId))
+                MutateCloaks(item, profile, profile.Tier);
+            else if (GetMutateAetheriaData(item.WeenieClassId))
                 MutateAetheria(item, profile.Tier);
             else if (GetMutateArmorData(item.WeenieClassId, out var armorType))
                 MutateArmor(item, profile, isMagical, armorType.Value);
