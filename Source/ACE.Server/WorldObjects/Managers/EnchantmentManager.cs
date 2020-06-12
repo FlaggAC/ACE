@@ -141,6 +141,11 @@ namespace ACE.Server.WorldObjects.Managers
             // check for existing spell in this category
             var entries = GetEnchantments(spell.Category);
 
+            if (caster is Gem gem && (gem.RareUsesTimer || gem.RareId != null) && Player != null)
+            {
+                Player.AddRareEnchantment(spell.Id);
+            }
+
             // if none, add new record
             if (entries.Count == 0)
             {
@@ -156,10 +161,6 @@ namespace ACE.Server.WorldObjects.Managers
 
             result.BuildStack(entries, spell, caster);
 
-            if (caster is Gem gem && (gem.RareUsesTimer || gem.RareId != null) && Player != null)
-            {
-                Player.AddRareEnchantment(spell.Id);
-            }
 
             // handle cases:
             // surpassing: new spell is written to next layer
