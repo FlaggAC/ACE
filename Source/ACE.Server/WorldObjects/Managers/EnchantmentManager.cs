@@ -156,6 +156,11 @@ namespace ACE.Server.WorldObjects.Managers
 
             result.BuildStack(entries, spell, caster);
 
+            if (caster is Gem gem && (gem.RareUsesTimer || gem.RareId != null) && Player != null)
+            {
+                Player.AddRareEnchantment(spell.Id);
+            }
+
             // handle cases:
             // surpassing: new spell is written to next layer
             // refreshing: - key by caster guid
@@ -302,6 +307,10 @@ namespace ACE.Server.WorldObjects.Managers
 
             if (Player != null)
             {
+                //TODO: Test with two of same rare then flag for PK
+                if (spellID >= 0)
+                    Player.TryRemoveRareEnchantment((uint)spellID);
+
                 var layer = (entry.SpellId == (uint)SpellId.Vitae) ? (ushort)0 : entry.LayerId; // this line is to force vitae to be layer 0 to match retail pcaps. We save it as layer 1 to make EF Core happy.
                 Player.Session.Network.EnqueueSend(new GameEventMagicRemoveEnchantment(Player.Session, (ushort)entry.SpellId, layer));
 

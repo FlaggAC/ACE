@@ -137,6 +137,8 @@ namespace ACE.Entity.Enum.Properties
         PlayersKilledIP9                  = 9027,
         [ServerOnly]
         PlayersKilledIP10                 = 9028,
+        [ServerOnly]
+        CurrentRareEnchantmentIds = 9029
     }
 
     public static class PropertyStringExtensions

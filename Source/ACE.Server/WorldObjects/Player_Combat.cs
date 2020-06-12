@@ -881,8 +881,25 @@ namespace ACE.Server.WorldObjects
         public void UpdatePKTimer()
         {
             //log.Info($"Updating PK timer for {Name}");
-
+            DispelPkRares();
             LastPkAttackTimestamp = Time.GetUnixTime();
+        }
+
+        //Since this may be called very frequently, this is an attempt at a more efficient means to dispel rare spells by using a cached HashSet of rare spell enchantments
+        private void DispelPkRares()
+        {
+            if (this.RareSpellEnchantments.Count > 0)
+            {
+                foreach (var spellid in this.RareSpellEnchantments.ToArray())
+                {
+                    // Retrieve enchantment on target and remove it, if present
+                    if (EnchantmentManager.HasSpell(spellid))
+                    {
+                            //target.EnchantmentManager.Remove(target.EnchantmentManager.GetEnchantment(spellId, item.Guid.Full));
+                            EnchantmentManager.Dispel(EnchantmentManager.GetEnchantment(spellid));
+                    }
+                }
+            }    
         }
 
         /// <summary>
