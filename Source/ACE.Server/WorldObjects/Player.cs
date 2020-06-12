@@ -28,6 +28,7 @@ using ACE.Server.WorldObjects.Managers;
 
 using Character = ACE.Database.Models.Shard.Character;
 using MotionTable = ACE.DatLoader.FileTypes.MotionTable;
+using System.Linq;
 
 namespace ACE.Server.WorldObjects
 {
@@ -116,6 +117,17 @@ namespace ACE.Server.WorldObjects
             Account = DatabaseManager.Authentication.GetAccountById(Character.AccountId);
 
             SetEphemeralValues();
+            if (!string.IsNullOrEmpty(CurrentRareEnchantmentIds))
+            {
+                var list = CurrentRareEnchantmentIds.Split('|');
+                foreach(var spellIdStr in list)
+                {
+                    if (uint.TryParse(spellIdStr, out uint spellId))
+                    {
+                        RareSpellEnchantments.Add(spellId);
+                    }
+                }
+            }    
 
             SortBiotasIntoInventory(inventory);
             AddBiotasToEquippedObjects(wieldedItems);
