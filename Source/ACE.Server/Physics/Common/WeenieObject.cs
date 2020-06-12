@@ -81,7 +81,7 @@ namespace ACE.Server.Physics.Common
             var strength = (int)player.Strength.Current;
 
             var numAugs = player.AugmentationIncreasedCarryingCapacity;
-
+            
             var capacity = EncumbranceSystem.EncumbranceCapacity(strength, numAugs);
 
             var encumbrance = player.EncumbranceVal ?? 0;
