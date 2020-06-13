@@ -1,4 +1,5 @@
 using ACE.Entity.Enum;
+using ACE.Server.Entity;
 using MySqlX.XDevAPI;
 using System;
 using System.Collections.Generic;
@@ -35,8 +36,15 @@ namespace ACE.GenerateSQLEnums
         {
             Initialize();
             var files = Directory.GetFiles(@$"{SolutionPath}\ACE.Entity\Enum");
+
+            var typesToExclude = new List<Type> {
+                    typeof(WeenieClassName),
+                    typeof(SpellId)
+                };
+
             var enumtypes = Assembly.GetAssembly(typeof(WeenieType)).GetTypes()
                 .Where(t => t.IsEnum && t.Namespace.Contains("ACE.Entity.Enum"))
+                .Where(t => !(typesToExclude.Contains(t)))
                 .ToList();
             StringBuilder sqlString = new StringBuilder();
             foreach (var enumtype in enumtypes)
@@ -60,12 +68,18 @@ namespace ACE.GenerateSQLEnums
                     }
                 }
 
-                sqlString.AppendLine(@$"CREATE TABLE {SCHEMA_NAME}.{enumtype.Name} (id bigint NOT NULL, name varchar(255) NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;");
-                
-                foreach(var intval in map.Keys)
+                sqlString.AppendLine(@$"DROP TABLE IF EXISTS {SCHEMA_NAME}.{enumtype.Name};");
+                sqlString.AppendLine(@$"CREATE TABLE {SCHEMA_NAME}.{enumtype.Name} (id bigint NOT NULL, name varchar(255) NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_cs;");
+
+                sqlString.AppendLine($"INSERT INTO {SCHEMA_NAME}.{enumtype.Name} (id, name) VALUES ");
+                foreach (var intval in map.Keys.Take(map.Keys.Count - 1))
                 {
-                    sqlString.AppendLine($"INSERT INTO {SCHEMA_NAME}.{enumtype.Name} (id, name) VALUES ({intval}, '{map[intval]}');");
+                    sqlString.AppendLine($"({intval}, '{map[intval]}'),");
                 }
+                var intvallast = map.Keys.Last();
+                sqlString.AppendLine($"({intvallast}, '{map[intvallast]}');");
+
+                sqlString.AppendLine($@"CREATE UNIQUE INDEX idx_{enumtype.Name} ON ace_enums.{enumtype.Name}(name);");
                 sqlString.AppendLine();
             }
 

@@ -1117,6 +1117,7 @@ namespace ACE.Server.Factories
                         numNonCantrips = 7;
 
                     numMajors = GetNumMajorCantrips(profile);
+                    numEpics = GetNumEpicCantrips(profile);
                     break;
 
                 case 7:
@@ -1771,11 +1772,13 @@ namespace ACE.Server.Factories
             if (PropertyManager.GetBool("loot_quality_mod").Item && profile.LootQualityMod > 0 && profile.LootQualityMod < 1)
                 lootQualityMod = 1.0f - profile.LootQualityMod;
 
-            // 1% chance for a legendary, 0.02% chance for 2 legendaries
+            // 1% chance for a legendary, 0.2% chance for 2 legendaries, 0.04% chance for 3 legendaries
             if (ThreadSafeRandom.Next(1, (int)(100 * dropRateMod * lootQualityMod)) == 1)
                 numLegendaries = 1;
             if (ThreadSafeRandom.Next(1, (int)(500 * dropRateMod * lootQualityMod)) == 1)
                 numLegendaries = 2;
+            if (ThreadSafeRandom.Next(1, (int)(2500 * dropRateMod * lootQualityMod)) == 1)
+                numLegendaries = 3;
 
             return numLegendaries;
         }
@@ -1784,7 +1787,7 @@ namespace ACE.Server.Factories
         {
             int numEpics = 0;
 
-            if (profile.Tier < 7)
+            if (profile.Tier < 6)
                 return 0;
 
             var dropRate = PropertyManager.GetDouble("epic_cantrip_drop_rate").Item;
@@ -1797,7 +1800,7 @@ namespace ACE.Server.Factories
             if (PropertyManager.GetBool("loot_quality_mod").Item && profile.LootQualityMod > 0 && profile.LootQualityMod < 1)
                 lootQualityMod = 1.0f - profile.LootQualityMod;
 
-            // 25% base chance for no epics for tier 7
+            // 25% base chance for no epics for tier 6
             if (ThreadSafeRandom.Next(1, 4) > 1)
             {
                 // 1% chance for 1 Epic, 0.1% chance for 2 Epics,
@@ -1810,6 +1813,8 @@ namespace ACE.Server.Factories
                     numEpics = 3;
                 if (ThreadSafeRandom.Next(1, (int)(100000 * dropRateMod * lootQualityMod)) == 1)
                     numEpics = 4;
+                if (ThreadSafeRandom.Next(1, (int)(1000000 * dropRateMod * lootQualityMod)) == 1)
+                    numEpics = 5;
             }
 
             return numEpics;
