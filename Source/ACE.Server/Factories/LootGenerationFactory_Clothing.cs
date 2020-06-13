@@ -96,7 +96,7 @@ namespace ACE.Server.Factories
 
                 wield = profile.Tier switch
                 {
-                    6 => 150,// In this instance, used for indicating player level, rather than skill level
+                    6 => 100,// In this instance, used for indicating player level, rather than skill level
                     7 => 150,
                     _ => 180,// In this instance, used for indicating player level, rather than skill level
                 };
