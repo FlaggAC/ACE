@@ -89,14 +89,15 @@ namespace ACE.Server.Factories
             wo.Value = value;
 
             int wield;
-            if (profile.Tier > 6 && armorType != LootTables.ArmorType.CovenantArmor)
+            if (profile.Tier >= 6 && armorType != LootTables.ArmorType.CovenantArmor)
             {
                 wo.WieldRequirements = WieldRequirement.Level;
                 wo.WieldSkillType = (int)Skill.Axe;  // Set by examples from PCAP data
 
                 wield = profile.Tier switch
                 {
-                    7 => 150,// In this instance, used for indicating player level, rather than skill level
+                    6 => 150,// In this instance, used for indicating player level, rather than skill level
+                    7 => 150,
                     _ => 180,// In this instance, used for indicating player level, rather than skill level
                 };
 
@@ -223,7 +224,7 @@ namespace ACE.Server.Factories
             // Last condition included to prevent equipment set Ids being added to armor weenies
             // that would be assigned AL via AssignArmorLevelCompat()
             if (PropertyManager.GetBool("equipmentsetid_enabled").Item
-                && wo.ClothingPriority != (CoverageMask)CoverageMaskHelper.Underwear && !wo.IsShield && profile.Tier > 7
+                && wo.ClothingPriority != (CoverageMask)CoverageMaskHelper.Underwear && !wo.IsShield && profile.Tier >= 6
                 && (wo.GetProperty(PropertyInt.Version) ?? 0) >= 3)
             {
                 if (wo.WieldRequirements == WieldRequirement.Level || wo.WieldRequirements == WieldRequirement.RawSkill)
