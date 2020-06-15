@@ -2864,7 +2864,7 @@ namespace ACE.Server.Command.Handlers
             session.Network.EnqueueSend(new GameMessageSystemChat($"Spell projectile debugging is {(session.Player.DebugSpell ? "enabled" : "disabled")}", ChatMessageType.Broadcast));
         }
 
-        [CommandHandler("recordcast", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Records spell casting keypresses to server for debugging")]
+        [CommandHandler("recordcast", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Records spell casting keypresses to server for debugging")]
         public static void HandleRecordCast(Session session, params string[] parameters)
         {
             if (parameters.Length == 0)
