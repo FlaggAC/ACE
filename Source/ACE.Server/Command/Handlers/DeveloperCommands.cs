@@ -392,7 +392,7 @@ namespace ACE.Server.Command.Handlers
         /// <summary>
         /// Debug command to print out all of the active players connected too the server.
         /// </summary>
-        [CommandHandler("listplayers", AccessLevel.Developer, CommandHandlerFlag.None, 0, "Displays all of the active players connected too the server.")]
+        [CommandHandler("listplayers", AccessLevel.Sentinel, CommandHandlerFlag.None, 0, "Displays all of the active players connected too the server.")]
         public static void HandleListPlayers(Session session, params string[] parameters)
         {
             string message = "";
