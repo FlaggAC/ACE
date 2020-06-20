@@ -97,7 +97,7 @@ namespace ACE.Server.WorldObjects
             if (Time.GetUnixTime() > GetProperty(PropertyFloat.PkDeathCountTimer))
                 DeathCount = 0;
 
-            if (noobzonekillblocks.Contains(Location.Cell) && Level > 100 && Account.AccessLevel != 5)
+            if (noobzonekillblocks.Contains(Location.Cell) && Level > 100 && Account.AccessLevel < 2)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat($"You shouldn't be in this location for your level. Teleporting you to your lifestone.", ChatMessageType.Broadcast));
                 PlayerManager.BroadcastToAuditChannel(Session.Player, $"{Name} has been teleported from noob dungeon aftering reaching level 101");
