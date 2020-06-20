@@ -870,7 +870,7 @@ namespace ACE.Server.Command.Handlers
         }
 
         // telepoi location
-        [CommandHandler("telepoi", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 1,
+        [CommandHandler("telepoi", AccessLevel.Sentinel, CommandHandlerFlag.RequiresWorld, 1,
             "Teleport yourself to a named Point of Interest",
             "[POI|list]\n" +
             "@telepoi Arwic\n" +
@@ -904,7 +904,7 @@ namespace ACE.Server.Command.Handlers
         }
 
         // teleloc cell x y z [qx qy qz qw]
-        [CommandHandler("teleloc", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 4,
+        [CommandHandler("teleloc", AccessLevel.Sentinel, CommandHandlerFlag.RequiresWorld, 4,
             "Teleport yourself to the specified location.",
             "cell [x y z] (qw qx qy qz)\n" +
             "@teleloc follows the same number order as displayed from @loc output\n" +
