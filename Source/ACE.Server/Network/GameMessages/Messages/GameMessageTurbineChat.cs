@@ -1,14 +1,21 @@
 using System;
 using System.Text;
 using ACE.Entity.Enum;
+using log4net;
+using log4net.Repository.Hierarchy;
 
 namespace ACE.Server.Network.GameMessages.Messages
 {
     public class GameMessageTurbineChat : GameMessage
     {
+        private static readonly ILog publicChatLog = LogManager.GetLogger(System.Reflection.Assembly.GetEntryAssembly(), "PublicChat");
+
         public GameMessageTurbineChat(ChatNetworkBlobType chatNetworkBlobType, uint channel, string senderName, string message, uint senderID, ChatType chatType)
             : base(GameMessageOpcode.TurbineChat, GameMessageGroup.LoginQueue)
         {
+            if (senderName != null || message != null)
+                publicChatLog.Info($"[{chatType.ToString()} {channel}] {senderName}: {message}");
+
             /*uint messageSize;       // the number of bytes that follow after this DWORD
             ChatNetworkBlobType type;   // the type of data contained in this message
             uint blobDispatchType;  // 1?

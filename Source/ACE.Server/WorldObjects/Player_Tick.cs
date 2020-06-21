@@ -97,7 +97,7 @@ namespace ACE.Server.WorldObjects
             if (Time.GetUnixTime() > GetProperty(PropertyFloat.PkDeathCountTimer))
                 DeathCount = 0;
 
-            if (noobzonekillblocks.Contains(Location.Cell) && Level > 100 && Account.AccessLevel != 5)
+            if (noobzonekillblocks.Contains(Location.Cell) && Level > 100 && Account.AccessLevel < 2)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat($"You shouldn't be in this location for your level. Teleporting you to your lifestone.", ChatMessageType.Broadcast));
                 PlayerManager.BroadcastToAuditChannel(Session.Player, $"{Name} has been teleported from noob dungeon aftering reaching level 101");
@@ -119,86 +119,6 @@ namespace ACE.Server.WorldObjects
                     Session.LogOffPlayer(true);
                 else
                     LogOut();
-            }
-
-            if (PKMode)
-            {
-                var trophies = GetInventoryItemsOfWCID(60002);
-                int stacksizes = 0;
-
-                var trophyarray = trophies.ToArray();
-
-                foreach (var item in trophyarray)
-                {
-                    stacksizes += (int)item.StackSize;
-                }
-
-                if (stacksizes < 24 && PKMode && Time.GetUnixTime() >= PKModeDuration)
-                {
-                    Session.Network.EnqueueSend(new GameMessageSystemChat($"[PKMode] You have {stacksizes} Pk Trophies, You need 25 or more to maintain PKMode and have been returned to normal.", ChatMessageType.Advancement));
-
-                    //stores current pkmode values
-                    PkModeStoredTotalExperience = TotalExperience;
-                    PkModeStoredLevel = Level;
-                    PkModeStoredAvailableExperience = AvailableExperience;
-                    PkModeStoredDelevelXP = DelevelXp;
-                    PkModeStoredPkDmgRating = PKDamageRating;
-                    PkModeStoredPkDmgRedRating = PKDamageResistRating;
-
-                    //updates to non-pkmode values
-
-                    UpdateProperty(this, PropertyInt.Level, NonPkModeStoredLevel);
-
-                    UpdateProperty(this, PropertyInt64.TotalExperience, NonPkModeStoredTotalExperience);
-
-                    UpdateProperty(this, PropertyInt64.AvailableExperience, NonPkModeStoredAvailableExperience);
-
-                    UpdateProperty(this, PropertyInt64.DelevelXp, NonPkModeStoredDelevelXP);
-
-                    UpdateProperty(this, PropertyInt.AvailableSkillCredits, NonPkModeStoredAvailableCredits);
-
-                    UpdateProperty(this, PropertyInt.PKDamageRating, 0);
-
-                    UpdateProperty(this, PropertyInt.PKDamageResistRating, 0);
-
-                    EnqueueBroadcast(new GameMessageScript(Guid, PlayScript.AttribDownRed, 1));
-
-                    SetProperty(PropertyBool.PKMode, false);
-
-                    SetProperty(PropertyFloat.PkModeTimer, Time.GetFutureUnixTime(300)); // 5 mins
-                }
-                else if (HasAllegiance)
-                {
-                    if (PKMode && stacksizes > 9 && Time.GetUnixTime() >= PKModeDuration && WorldManager.Controlblock == Allegiance.Monarch.Player.Name && Location.Landblock == 0x0174)
-                    {
-                        //consumes pk trophies and sets timer. FOR CONTROL BLOCK
-                        TryConsumeFromInventoryWithNetworking(60002, 10);
-                        SetProperty(PropertyFloat.PKModeDuration, Time.GetFutureUnixTime(3600)); // 1 hour
-                        Session.Network.EnqueueSend(new GameMessageSystemChat($"[PKMode] 10 PK Trophies have been removed to extend the duration of PKMode. You have {stacksizes - 10} remaining. Your allegiance owns the Control Block reducing the amount consumed.", ChatMessageType.Advancement));
-                    }
-                    else if (PKMode && stacksizes > 34 && Time.GetUnixTime() >= PKModeDuration && WorldManager.Controlblock != Allegiance.Monarch.Player.Name && Location.Landblock == 0x0174)
-                    {
-                        //consumes pk trophies and sets timer. NON CONTROL BLOCK w/ Alleg
-                        TryConsumeFromInventoryWithNetworking(60002, 35);
-                        SetProperty(PropertyFloat.PKModeDuration, Time.GetFutureUnixTime(3600)); // 1 hour
-                        Session.Network.EnqueueSend(new GameMessageSystemChat($"[PKMode] 35 PK Trophies have been removed to extend the duration of PKMode. You have {stacksizes - 35} remaining. The power of the Control Block consumes more Trophies to sustain PKMode.", ChatMessageType.Advancement));
-                    }
-                    else if (PKMode && stacksizes > 24 && Time.GetUnixTime() >= PKModeDuration && Location.Landblock != 0x0174)
-                    {
-                        //consumes pk trophies and sets timer. NON CONTROL BLOCK w/o Alleg
-                        TryConsumeFromInventoryWithNetworking(60002, 25);
-                        SetProperty(PropertyFloat.PKModeDuration, Time.GetFutureUnixTime(3600)); // 1 hour
-                        Session.Network.EnqueueSend(new GameMessageSystemChat($"[PKMode] 25 PK Trophies have been removed to extend the duration of PKMode. You have {stacksizes - 25} remaining.", ChatMessageType.Advancement));
-                    }
-                }
-                else if (PKMode && stacksizes > 24 && Time.GetUnixTime() >= PKModeDuration)
-                {
-                    //consumes pk trophies and sets timer. NON CONTROL BLOCK
-                    TryConsumeFromInventoryWithNetworking(60002, 25);
-                    SetProperty(PropertyFloat.PKModeDuration, Time.GetFutureUnixTime(3600)); // 1 hour
-                    Session.Network.EnqueueSend(new GameMessageSystemChat($"[PKMode] 25 PK Trophies have been removed to extend the duration of PKMode. You have {stacksizes - 25} remaining.", ChatMessageType.Advancement));
-
-                }
             }
 
             base.Heartbeat(currentUnixTime);

@@ -164,8 +164,10 @@ namespace ACE.Server.WorldObjects
                     IsAdmin = true;
                 if (Session.AccessLevel == AccessLevel.Developer)
                     IsArch = true;
-                if (Session.AccessLevel == AccessLevel.Envoy || Session.AccessLevel == AccessLevel.Sentinel)
+                if (Session.AccessLevel == AccessLevel.Sentinel)
                     IsSentinel = true;
+                if (Session.AccessLevel == AccessLevel.Envoy)
+                    IsEnvoy = true;
                 if (Session.AccessLevel == AccessLevel.Advocate)
                     IsAdvocate = true;
             }
@@ -484,7 +486,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public bool LogOut(bool clientSessionTerminatedAbruptly = false, bool forceImmediate = false)
         {
-            if (!forceImmediate && Session.Player.Level > 49) // committed adding comment to log entry.
+            if (!forceImmediate && Session.Player.Level >= PropertyManager.GetLong("pk_logout_timer_min_level").Item) // committed adding comment to log entry.
             {
                 var deflog = 20;
 
