@@ -241,7 +241,7 @@ namespace ACE.Server.Command.Handlers.Processors
                     break;
 
                 case FileType.Weenie:
-                    ImportSQLWeenieWrapped(session, param, parameters.Length >= 2 ? parameters[2] : "");
+                    ImportSQLWeenieWrapped(session, param, parameters.Length >= 3 ? parameters[2] : "");
                     break;
             }
         }
@@ -288,7 +288,7 @@ namespace ACE.Server.Command.Handlers.Processors
             }
 
             foreach (var file in files)
-                ImportSQLWeenie(session, sql_folder, file.Name);
+                ImportSQLWeenie(session, file.FullName, file.Name);
         }
 
         public static void ImportSQLRecipe(Session session, string recipeId)
@@ -810,17 +810,17 @@ namespace ACE.Server.Command.Handlers.Processors
         /// <summary>
         /// Converts SQL to JSON, imports to database, clears the weenie cache
         /// </summary>
-        private static void ImportSQLWeenie(Session session, string sql_folder, string sql_file)
+        private static void ImportSQLWeenie(Session session, string sql_path, string sql_filename)
         {
-            if (!uint.TryParse(Regex.Match(sql_file, @"\d+").Value, out var wcid))
+            if (!uint.TryParse(Regex.Match(sql_filename, @"\d+").Value, out var wcid))
             {
-                CommandHandlerHelper.WriteOutputInfo(session, $"Couldn't find wcid from {sql_file}");
+                CommandHandlerHelper.WriteOutputInfo(session, $"Couldn't find wcid from {sql_filename}");
                 return;
             }
 
             // import sql to db
-            ImportSQL(sql_folder + sql_file);
-            CommandHandlerHelper.WriteOutputInfo(session, $"Imported {sql_file}");
+            ImportSQL(sql_path);
+            CommandHandlerHelper.WriteOutputInfo(session, $"Imported {sql_path}");
 
             // clear this weenie out of the cache
             DatabaseManager.World.ClearCachedWeenie(wcid);
@@ -834,7 +834,7 @@ namespace ACE.Server.Command.Handlers.Processors
                 return;
             }
 
-            sql2json_weenie(session, weenie, sql_folder, sql_file);
+            sql2json_weenie(session, weenie, Path.GetDirectoryName(sql_path) + Path.DirectorySeparatorChar, sql_filename);
         }
 
         private static void ImportSQLRecipe(Session session, string sql_folder, string sql_file)
