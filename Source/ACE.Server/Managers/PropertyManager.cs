@@ -492,6 +492,7 @@ namespace ACE.Server.Managers
                 ("assess_creature_mod", new Property<bool>(false, "(non-retail function) If enabled, re-enables former skill formula, when assess creature skill is not trained or spec'ed")),
                 ("chess_enabled", new Property<bool>(true, "if FALSE then chess will be disabled")),
                 ("client_movement_formula", new Property<bool>(false, "If enabled, server uses DoMotion/StopMotion self-client movement methods instead of apply_raw_movement")),
+                ("command_pop_enabled", new Property<bool>(true, "If enabled, the server will report population numbers when requested.")),
                 ("container_opener_name", new Property<bool>(false, "If enabled, when a player tries to open a container that is already in use by someone else, replaces 'someone else' in the message with the actual name of the player")),
                 ("corpse_decay_tick_logging", new Property<bool>(false, "If ENABLED then player corpse ticks will be logged")),
                 ("corpse_destroy_pyreals", new Property<bool>(true, "If FALSE then pyreals will not be completely destroyed on player death")),
@@ -554,7 +555,8 @@ namespace ACE.Server.Managers
                 ("rares_max_seconds_between", new Property<long>(5256000, "for rares_real_time: the maximum number of seconds a player can go before a second chance at a rare is allowed on rare eligible creature kills that did not generate a rare")),
                 ("teleport_visibility_fix", new Property<long>(0, "Fixes some possible issues with invisible players and mobs. 0 = default / disabled, 1 = players only, 2 = creatures, 3 = all world objects")),
                 ("ignore_burden_below_character_level", new Property<long>(100, "The minimum character level at which burden will start to apply. Retail defaults to 0.")),
-                ("pk_logout_timer_min_level", new Property<long>(100, "The minimum character level for which the pk logout timer will apply."))
+                ("pk_logout_timer_min_level", new Property<long>(100, "The minimum character level for which the pk logout timer will apply.")),
+                ("turbine_chat_min_level", new Property<long>(1, "Minimum character level to use global chat channels (General, LFG, Roleplay, Trade, Olthoi, Society, Allegience)"))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<double>> DefaultDoubleProperties =

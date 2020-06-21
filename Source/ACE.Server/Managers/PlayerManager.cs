@@ -231,7 +231,7 @@ namespace ACE.Server.Managers
             return results;
         }
 
-        public static int GetOnlineCount()
+        public static int GetActualOnlineCount()
         {
             playersLock.EnterReadLock();
             try
@@ -242,6 +242,13 @@ namespace ACE.Server.Managers
             {
                 playersLock.ExitReadLock();
             }
+        }
+
+        public static int GetOnlineCount()
+        {
+            if (PropertyManager.GetBool("command_pop_enabled").Item)
+                return GetActualOnlineCount();
+            return 50; //Information no longer shared with the public.
         }
 
         /// <summary>
