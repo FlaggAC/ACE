@@ -392,7 +392,7 @@ namespace ACE.Server.Command.Handlers
         /// <summary>
         /// Debug command to print out all of the active players connected too the server.
         /// </summary>
-        [CommandHandler("listplayers", AccessLevel.Developer, CommandHandlerFlag.None, 0, "Displays all of the active players connected too the server.")]
+        [CommandHandler("listplayers", AccessLevel.Sentinel, CommandHandlerFlag.None, 0, "Displays all of the active players connected too the server.")]
         public static void HandleListPlayers(Session session, params string[] parameters)
         {
             string message = "";
@@ -2026,7 +2026,7 @@ namespace ACE.Server.Command.Handlers
         /// <summary>
         /// Teleports directly to a dungeon by name or landblock
         /// </summary>
-        [CommandHandler("teledungeon", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 1, "Teleport to a dungeon", "<dungeon name or landblock>")]
+        [CommandHandler("teledungeon", AccessLevel.Sentinel, CommandHandlerFlag.RequiresWorld, 1, "Teleport to a dungeon", "<dungeon name or landblock>")]
         public static void HandleTeleDungeon(Session session, params string[] parameters)
         {
             var isBlock = true;
@@ -2864,7 +2864,7 @@ namespace ACE.Server.Command.Handlers
             session.Network.EnqueueSend(new GameMessageSystemChat($"Spell projectile debugging is {(session.Player.DebugSpell ? "enabled" : "disabled")}", ChatMessageType.Broadcast));
         }
 
-        [CommandHandler("recordcast", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Records spell casting keypresses to server for debugging")]
+        [CommandHandler("recordcast", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Records spell casting keypresses to server for debugging")]
         public static void HandleRecordCast(Session session, params string[] parameters)
         {
             if (parameters.Length == 0)

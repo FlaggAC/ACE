@@ -241,28 +241,45 @@ namespace ACE.Server.Command.Handlers.Processors
                     break;
 
                 case FileType.Weenie:
-                    ImportSQLWeenie(session, param);
+                    ImportSQLWeenieWrapped(session, param, parameters.Length >= 2 ? parameters[2] : "");
                     break;
             }
         }
 
-        public static void ImportSQLWeenie(Session session, string wcid)
+        public static void ImportSQLWeenieWrapped(Session session, string param, string param2)
         {
             DirectoryInfo di = VerifyContentFolder(session);
             if (!di.Exists) return;
 
             var sep = Path.DirectorySeparatorChar;
 
+            var prefix = param + " ";
+
             var sql_folder = $"{di.FullName}{sep}sql{sep}weenies{sep}";
 
-            var prefix = wcid + " ";
-
-            if (wcid.Equals("all", StringComparison.OrdinalIgnoreCase))
+            if (param.Equals("folder", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(param2))
+            {
+                if (param2.Contains(".."))
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"Path may not contain the sequence '..'");
+                    return;
+                }
+                sql_folder = $"{sql_folder}{param2}{sep}";
                 prefix = "";
+            }
+            else if (param.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                prefix = "";
+            }
 
             di = new DirectoryInfo(sql_folder);
+            if (!di.Exists)
+            {
+                CommandHandlerHelper.WriteOutputInfo(session, $"Couldn't find folder: {di.FullName}");
+                return;
+            }
 
-            var files = di.Exists ? di.GetFiles($"{prefix}*.sql") : null;
+            var files = di.Exists ? di.GetFiles($"{prefix}*.sql", SearchOption.AllDirectories) : null;
 
             if (files == null || files.Length == 0)
             {

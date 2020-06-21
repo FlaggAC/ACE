@@ -74,6 +74,9 @@
     <None Update="Config.js.example">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="log4net.config.docker">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
