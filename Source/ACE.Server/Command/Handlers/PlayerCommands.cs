@@ -30,40 +30,8 @@ namespace ACE.Server.Command.Handlers
             "")]
         public static void HandlePop(Session session, params string[] parameters)
         {
-            session.Network.EnqueueSend(new GameMessageSystemChat($"Current world population: {PlayerManager.GetOnlineCount().ToString()}\n", ChatMessageType.Broadcast));
-        }
-
-        [CommandHandler("pktop", AccessLevel.Player, CommandHandlerFlag.None, 0,
-            "shows current top pkmode levels of all players on the server",
-            "")]
-        public static void HandlePKtop(Session session, params string[] parameters)
-        {
-            var allplayers = PlayerManager.GetAllPlayers();
-
-            var storedData = new List<KeyValuePair<int, string>>();
-
-
-            foreach (var player in allplayers)
-            {
-                if (player.PkModeStoredLevel != null)
-                {
-                    storedData.Add(new KeyValuePair<int, string>((int)player.PkModeStoredLevel, player.Name));
-                }
-
-                storedData = storedData.OrderByDescending(x => x.Key).ToList();
-
-                if (storedData.Count > 5)
-                    storedData.RemoveAt(storedData.Count - 1);
-            }
-
-            session.Network.EnqueueSend(new GameMessageSystemChat($"TOP PK LEVELS.", ChatMessageType.Broadcast));
-            session.Network.EnqueueSend(new GameMessageSystemChat($"-----------------------------", ChatMessageType.Broadcast));
-            foreach (KeyValuePair<int, string> a in storedData)
-            {
-                session.Network.EnqueueSend(new GameMessageSystemChat($"PKLevel : {a.Key}, Player : {a.Value}", ChatMessageType.Broadcast));
-            }
-            session.Network.EnqueueSend(new GameMessageSystemChat($"-----------------------------", ChatMessageType.Broadcast));
-
+            if (PropertyManager.GetBool("command_pop_enabled").Item || session.AccessLevel != AccessLevel.Player)
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Current world population: {PlayerManager.GetActualOnlineCount().ToString()}\n", ChatMessageType.Broadcast));
         }
 
         [CommandHandler("pkmode", AccessLevel.Player, CommandHandlerFlag.RequiresWorld,
