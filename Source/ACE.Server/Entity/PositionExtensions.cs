@@ -40,7 +40,7 @@ namespace ACE.Server.Entity
             //if (landblock.IsDungeon)
             if (p.Indoors)
             {
-                var iPos = new Position(p.ObjCellID, pos, p.Rotation);
+                var iPos = new Position(p.ObjCellID, pos, p.Rotation, false, p.Instance);
                 iPos.ObjCellID = GetCell(iPos);
                 return iPos;
             }

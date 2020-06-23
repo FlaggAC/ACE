@@ -54,7 +54,7 @@ namespace ACE.Server.WorldObjects
 
             if (RelativeDestination != null && Location != null && Destination == null)
             {
-                var destination = new Position(Location.ObjCellID, Location.Pos + RelativeDestination.Pos, RelativeDestination.Rotation, true);
+                var destination = new Position(Location.ObjCellID, Location.Pos + RelativeDestination.Pos, RelativeDestination.Rotation, true, Location.Instance);
 
                 UpdatePortalDestination(destination);
             }
