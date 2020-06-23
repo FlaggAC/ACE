@@ -4337,7 +4337,7 @@ namespace ACE.Server.Physics
                     foreach (var collideObject in transit.CollisionInfo.CollideObject)
                         track_object_collision(collideObject, prevContact);
                 }
-
+                set_current_pos(RequestPos, RequestInstance);
             }
 
             // for teleport, use SetPosition?
