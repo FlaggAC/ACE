@@ -1,5 +1,5 @@
 using System;
-
+using System.Linq;
 using ACE.Common;
 using ACE.Entity;
 using ACE.Entity.Enum;
@@ -7,6 +7,7 @@ using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
+using ACE.Server.Entity.Mutators;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Physics;
@@ -244,8 +245,17 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public uint GetHealAmount(Player healer, Player target, CreatureVital vital, out bool criticalHeal, out uint staminaCost)
         {
-            // factors: healing skill, healing kit bonus, stamina, critical chance
+            
+
+            // factors: healing skill, healing kit bonus, stamina, critical chance, landblock mutator
             var healingSkill = healer.GetCreatureSkill(Skill.Healing).Current;
+            
+
+            var healSkillInt = (int)healingSkill;
+            healSkillInt += MutatorsForLandblock.GetAggregatedMutatorForPlayer<PlayerMutators.HealingKitAddedSkillMod, int>(healer, PlayerMutatorBuffType.Buff) ?? 0;
+            healSkillInt += MutatorsForLandblock.GetAggregatedMutatorForPlayer<PlayerMutators.HealingKitAddedSkillMod, int>(healer, PlayerMutatorBuffType.Debuff) ?? 0;
+            healingSkill = healSkillInt < 0 ? 0 : (uint)healSkillInt;
+
             var healBase = healingSkill * (float)HealkitMod.Value;
 
             // todo: determine applicable range from pcaps
@@ -258,6 +268,9 @@ namespace ACE.Server.WorldObjects
             var ratingMod = target.GetHealingRatingMod();
 
             healAmount *= ratingMod;
+
+            healAmount *= MutatorsForLandblock.GetAggregatedMutatorForPlayer<PlayerMutators.HealingKitMultiplierMod, float>(healer, PlayerMutatorBuffType.Buff) ?? 1f;
+            healAmount += MutatorsForLandblock.GetAggregatedMutatorForPlayer<PlayerMutators.HealingKitMultiplierMod, float>(healer, PlayerMutatorBuffType.Buff) ?? 1f;
 
             // chance for critical healing
             criticalHeal = ThreadSafeRandom.Next(0.0f, 1.0f) < 0.1f;

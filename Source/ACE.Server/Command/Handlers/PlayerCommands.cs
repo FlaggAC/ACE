@@ -600,5 +600,11 @@ namespace ACE.Server.Command.Handlers
            session.Player.StanceLog.Show();
        }*/
 
+        [CommandHandler("zoneinfo", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Get Zone Info")]
+        public static void HandleZoneInfo(Session session, params string[] parameters)
+        {
+            var info = session.Player.CurrentLandblock.Mutators.DescribeMutators();
+            session.Network.EnqueueSend(new GameMessageSystemChat(info, ChatMessageType.Broadcast));
+        }
     }
 }

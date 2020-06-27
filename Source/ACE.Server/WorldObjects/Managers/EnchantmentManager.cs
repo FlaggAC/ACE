@@ -14,6 +14,7 @@ using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.Structure;
 using ACE.Server.WorldObjects.Entity;
+using ACE.Server.Entity.Mutators;
 
 namespace ACE.Server.WorldObjects.Managers
 {
@@ -390,6 +391,13 @@ namespace ACE.Server.WorldObjects.Managers
             if (Player == null) return 0;
             PropertiesEnchantmentRegistry vitae;
 
+            var baseVitaePerDeath = (float)PropertyManager.GetDouble("vitae_penalty").Item;
+            baseVitaePerDeath =
+                MutatorsForLandblock
+                .GetAggregatedMutatorForPlayer<PlayerMutators.DeathPenaltyVitaeOverride, float>
+                (Player, PlayerMutatorBuffType.Debuff)
+                ?? baseVitaePerDeath;
+
             if (!HasVitae)
             {
                 // TODO refactor this so it uses the existing Add() method.
@@ -401,26 +409,23 @@ namespace ACE.Server.WorldObjects.Managers
                 vitae.EnchantmentCategory = (uint)EnchantmentMask.Vitae;
                 vitae.LayerId = 1; // This should be 0 but EF Core seems to be very unhappy with 0 as the layer id now that we're using layer as part of the composite key.
 
+                vitae.StatModValue = 1.0f - baseVitaePerDeath;
+
                 if (Player.Enlightenment >= 1 && Player.Enlightenment <= 2)
-                {
-                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item + (float)0.01;
-                }// reduce vitae by 1%
+                    vitae.StatModValue += .01f;
                 else if (Player.Enlightenment >= 3 && Player.Enlightenment <= 4)
-                {
-                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item + (float)0.02;
-                }// reduce vitae by 2%
+                    vitae.StatModValue += .02f;
                 else if (Player.Enlightenment >= 5 && Player.Enlightenment <= 6)
-                {
-                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item + (float)0.03;
-                }// reduce vitae by 3%
+                    vitae.StatModValue += .03f;
                 else if (Player.Enlightenment >= 7)
+                    vitae.StatModValue += .04f;
+
+                if (vitae.StatModValue >= 1f)
                 {
-                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item + (float)0.04;
-                }// reduce vitae by 4%
-                else
-                {
-                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item;
-                } // do normal stuff if no enlighten
+                    vitae.StatModValue = 1f;
+                    return 1f;
+                }
+               
                 WorldObject.Biota.PropertiesEnchantmentRegistry.AddEnchantment(vitae, WorldObject.BiotaDatabaseLock);
                 WorldObject.ChangesDetected = true;
             }
@@ -430,28 +435,25 @@ namespace ACE.Server.WorldObjects.Managers
                 vitae = GetVitae();
                 if (Player.Enlightenment >= 1 && Player.Enlightenment <= 2)
                 {
-                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item - (float)0.01;
-                    
-                }// reduce vitae by 1%
+                    vitae.StatModValue -= baseVitaePerDeath - (float)0.01;
+                }
                 else if (Player.Enlightenment >= 3 && Player.Enlightenment <= 4)
                 {
-                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item - (float)0.02;
-                    
-                }// reduce vitae by 2%
+                    vitae.StatModValue -= baseVitaePerDeath - (float)0.02;
+                }
                 else if (Player.Enlightenment >= 5 && Player.Enlightenment <= 6)
                 {
-                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item - (float)0.03;
-                    
-                }// reduce vitae by 3%
+                    vitae.StatModValue -= baseVitaePerDeath - (float)0.03;
+                }
                 else if (Player.Enlightenment >= 7 && Player.Enlightenment <= 8)
                 {
-                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item - (float)0.04;
-                    
-                }// reduce vitae by 4%
+                    vitae.StatModValue -= baseVitaePerDeath - (float)0.04;
+                }
                 else
                 {
-                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item;                    
-                } // do normal stuff if no enlighten
+                    vitae.StatModValue -= baseVitaePerDeath;
+                }
+
                 WorldObject.ChangesDetected = true;
             }
 

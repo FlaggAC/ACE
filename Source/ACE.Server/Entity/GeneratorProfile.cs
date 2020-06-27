@@ -11,6 +11,7 @@ using ACE.Entity.Models;
 using ACE.Server.Factories;
 using ACE.Server.Physics.Common;
 using ACE.Server.WorldObjects;
+using ACE.Server.Entity.Mutators;
 
 namespace ACE.Server.Entity
 {
@@ -339,6 +340,13 @@ namespace ACE.Server.Entity
 
             obj.ScatterPos = new SetPosition(new Physics.Common.Position(obj.Location), SetPositionFlags.RandomScatter, genRadius);
 
+            if (obj is Creature creature && !(obj is Player))
+            {
+                var mutators = obj.GetMutatorsForLocation().GetAll<MobMutators.MobSpawnMutator>();
+                foreach (var mutator in mutators)
+                    mutator.OnSpawn(creature);
+            }
+
             var success = obj.EnterWorld();
 
             obj.ScatterPos = null;
@@ -375,6 +383,13 @@ namespace ACE.Server.Entity
             //log.Debug($"{_generator.Name}.Spawn_Default({obj.Name}): default handler for RegenLocationType {RegenLocationType}");
 
             obj.Location = new ACE.Entity.Position(Generator.Location);
+
+            if (obj is Creature creature && !(obj is Player))
+            {
+                var mutators = obj.GetMutatorsForLocation().GetAll<MobMutators.MobSpawnMutator>();
+                foreach (var mutator in mutators)
+                    mutator.OnSpawn(creature);
+            }
 
             return obj.EnterWorld();
         }

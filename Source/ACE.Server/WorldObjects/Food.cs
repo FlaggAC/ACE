@@ -7,6 +7,7 @@ using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Physics;
+using ACE.Server.Entity.Mutators;
 
 namespace ACE.Server.WorldObjects
 {
@@ -98,7 +99,12 @@ namespace ACE.Server.WorldObjects
             // only apply to restoration food?
             var ratingMod = BoostValue > 0 ? player.GetHealingRatingMod() : 1.0f;
 
-            var boostValue = (int)Math.Round(BoostValue * ratingMod);
+            var mutators = MutatorsForLandblock.GetForPlayer<PlayerMutators.FoodMod>(player);
+            float lbmultiplier = 1f;
+            foreach(var mutator in mutators)
+                lbmultiplier *= mutator.Multiplier;
+
+            var boostValue = (int)Math.Round(BoostValue * ratingMod * lbmultiplier);
 
             var vitalChange = (uint)Math.Abs(player.UpdateVitalDelta(vital, boostValue));
 

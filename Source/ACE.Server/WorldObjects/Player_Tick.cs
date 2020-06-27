@@ -17,6 +17,7 @@ using ACE.Server.Network.Sequence;
 using ACE.Server.Network.Structure;
 using ACE.Server.Physics;
 using ACE.Server.Physics.Common;
+using ACE.Server.Entity.Mutators;
 
 namespace ACE.Server.WorldObjects
 {
@@ -84,6 +85,8 @@ namespace ACE.Server.WorldObjects
         {
             NotifyLandblocks();
 
+            LandblockMutatorTick();
+
             ManaConsumersTick();
 
             HandleTargetVitals();
@@ -122,6 +125,13 @@ namespace ACE.Server.WorldObjects
             }
 
             base.Heartbeat(currentUnixTime);
+        }
+
+        private void LandblockMutatorTick()
+        {
+            var mutators = MutatorsForLandblock.GetForPlayer<PlayerMutators.PeriodicTick>(this);
+            foreach(var mutator in mutators)
+                mutator.Action(this);
         }
 
         public static float MaxSpeed = 50;

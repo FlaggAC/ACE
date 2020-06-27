@@ -30,6 +30,7 @@ using ACE.Server.WorldObjects.Managers;
 
 using Landblock = ACE.Server.Entity.Landblock;
 using Position = ACE.Entity.Position;
+using ACE.Server.Entity.Mutators;
 
 namespace ACE.Server.WorldObjects
 {
@@ -1061,6 +1062,11 @@ namespace ACE.Server.WorldObjects
                 return new List<WorldObject>();
             else
                 return new List<WorldObject>() { this };
+        }
+
+        public MutatorsForLandblock GetMutatorsForLocation()
+        {
+            return LandblockManager.GetLandblock(this.Location.LongObjCellID, false, false).Mutators;
         }
     }
 }

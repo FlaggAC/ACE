@@ -10,6 +10,7 @@ using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
+using ACE.Server.Entity.Mutators;
 using ACE.Server.Factories;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
@@ -494,7 +495,12 @@ namespace ACE.Server.WorldObjects
 
                 var damagePercent = totalDamage / totalHealth;
 
-                var totalXP = (XpOverride ?? 0) * damagePercent;
+                var xpMutators = MutatorsForLandblock.GetForPlayer<PlayerMutators.XPMod>(playerDamager as Player);
+                float xpmutatormod = 1f;
+                foreach (var mutator in xpMutators)
+                    xpmutatormod *= mutator.Multiplier;
+
+                var totalXP = (XpOverride ?? 0) * damagePercent * xpmutatormod;
 
                 // should this be passed upstream to fellowship / allegiance?
                 if (playerDamager.AugmentationBonusXp > 0)

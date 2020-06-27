@@ -27,6 +27,7 @@ using ACE.Server.Network.GameMessages;
 using ACE.Server.WorldObjects;
 
 using Position = ACE.Entity.Position;
+using ACE.Server.Entity.Mutators;
 
 namespace ACE.Server.Entity
 {
@@ -92,6 +93,8 @@ namespace ACE.Server.Entity
         public List<Landblock> Adjacents = new List<Landblock>();
 
         private readonly ActionQueue actionQueue = new ActionQueue();
+
+        public MutatorsForLandblock Mutators { get; set; } = new MutatorsForLandblock();
 
         /// <summary>
         /// Landblocks heartbeat every 5 seconds
@@ -202,6 +205,8 @@ namespace ACE.Server.Entity
 
             Task.Run(() =>
             {
+                LoadMutators();
+
                 CreateWorldObjects();
 
                 SpawnDynamicShardObjects();
@@ -210,6 +215,14 @@ namespace ACE.Server.Entity
             });
 
             //LoadMeshes(objects);
+        }
+
+        private void LoadMutators()
+        {
+            if (Instance >= 10) //TEMPORARY
+            {
+                Mutators = LandblockMutatorRoller.RollMutators(Instance - 10);
+            }
         }
 
         /// <summary>
