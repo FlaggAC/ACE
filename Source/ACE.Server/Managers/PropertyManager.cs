@@ -567,7 +567,6 @@ namespace ACE.Server.Managers
                 ("major_cantrip_drop_rate", new Property<double>(1.0, "Modifier for major cantrip drop rate, 1 being normal")),
                 ("epic_cantrip_drop_rate", new Property<double>(1.0, "Modifier for epic cantrip drop rate, 1 being normal")),
                 ("legendary_cantrip_drop_rate", new Property<double>(1.0, "Modifier for legendary cantrip drop rate, 1 being normal")),
-
                 ("advocate_fane_auto_bestow_level", new Property<double>(1, "the level that advocates are automatically bestowed by Advocate Fane if advocate_fane_auto_bestow is true")),
                 ("aetheria_drop_rate", new Property<double>(1.0, "Modifier for Aetheria drop rate, 1 being normal")),
                 ("chess_ai_start_time", new Property<double>(-1.0, "the number of seconds for the chess ai to start. defaults to -1 (disabled)")),
@@ -577,6 +576,9 @@ namespace ACE.Server.Managers
                 ("fast_missile_modifier", new Property<double>(1.2, "The speed multiplier applied to fast missiles. Defaults to retail value of 1.2")),
                 ("ignore_magic_armor_pvp_scalar", new Property<double>(1.0, "Scales the effectiveness of IgnoreMagicArmor (ie. hollow weapons) in pvp battles. 1.0 = full effectiveness / ignore all enchantments on armor (default), 0.5 = half effectiveness / use half enchantments from armor, 0.0 = no effectiveness / use full enchantments from armor")),
                 ("ignore_magic_resist_pvp_scalar", new Property<double>(1.0, "Scales the effectiveness of IgnoreMagicResist (ie. hollow weapons) in pvp battles. 1.0 = full effectiveness / ignore all resistances from life enchantments (default), 0.5 = half effectiveness / use half resistances from life enchantments, 0.0 = no effectiveness / use full resistances from life enchantments")),
+                ("imbue_crippling_blow_magic_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for magic attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
+                ("imbue_crippling_blow_melee_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for melee attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
+                ("imbue_crippling_blow_missile_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for missile attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
                 ("luminance_modifier", new Property<double>(1.0, "Scales the amount of luminance received by players")),
                 ("mob_awareness_range", new Property<double>(1.0, "Scales the distance the monsters become alerted and aggro the players")),
                 ("pk_new_character_grace_period", new Property<double>(300, "the number of seconds, in addition to pk_respite_timer, that a player killer is set to non-player killer status after first exiting training academy")),
