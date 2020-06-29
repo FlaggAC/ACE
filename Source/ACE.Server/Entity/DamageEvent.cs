@@ -220,6 +220,14 @@ namespace ACE.Server.Entity
             // damage before mitigation
             DamageBeforeMitigation = BaseDamage * AttributeMod * PowerMod * SlayerMod * DamageRatingMod;
 
+            float pvpBalanceMulti = 1f;
+            if (playerAttacker != null && playerDefender != null && Weapon?.WeaponSkill == Skill.MissileWeapons)
+                pvpBalanceMulti *= (float)PropertyManager.GetDouble("pvp_missile_weapon_damage_modifier").Item;
+            else if (playerAttacker != null && playerDefender != null && Weapon == null || Weapon.WeaponSkill != Skill.MissileWeapons)
+                pvpBalanceMulti *= (float)PropertyManager.GetDouble("pvp_melee_weapon_damage_modifier").Item;
+
+            DamageBeforeMitigation *= pvpBalanceMulti;
+
             // critical hit?
             var attackSkill = attacker.GetCreatureSkill(attacker.GetCurrentWeaponSkill());
             CriticalChance = WorldObject.GetWeaponCriticalChance(attacker, attackSkill, defender);
