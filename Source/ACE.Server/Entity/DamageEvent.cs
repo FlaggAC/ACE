@@ -223,7 +223,7 @@ namespace ACE.Server.Entity
             float pvpBalanceMulti = 1f;
             if (playerAttacker != null && playerDefender != null && Weapon?.WeaponSkill == Skill.MissileWeapons)
                 pvpBalanceMulti *= (float)PropertyManager.GetDouble("pvp_missile_weapon_damage_modifier").Item;
-            else if (playerAttacker != null && playerDefender != null && Weapon == null || Weapon.WeaponSkill != Skill.MissileWeapons)
+            else if (playerAttacker != null && playerDefender != null && (Weapon == null || Weapon.WeaponSkill != Skill.MissileWeapons))
                 pvpBalanceMulti *= (float)PropertyManager.GetDouble("pvp_melee_weapon_damage_modifier").Item;
 
             DamageBeforeMitigation *= pvpBalanceMulti;
