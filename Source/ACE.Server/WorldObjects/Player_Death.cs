@@ -266,34 +266,37 @@ namespace ACE.Server.WorldObjects
 
             if (IsPKDeath(topDamager))
             {
-                var asshole = topDamager.TryGetAttacker() as Player;
-                var pktrophy = WorldObjectFactory.CreateNewWorldObject("pktrophy");
+                var killer = topDamager.TryGetAttacker() as Player;
+                if (killer != null)
+                {
+                    var pktrophy = WorldObjectFactory.CreateNewWorldObject("pktrophy");
 
-                if (Time.GetUnixTime() > TrophyTimer) // If current time is greater than Timer. Allow Trophy drop again.
-                {
-                    SetProperty(PropertyBool.Trophy, false);
-                }
-                else if (Time.GetUnixTime() < TrophyTimer) // If current time is less than Timer. Maintain restriction.
-                {
-                    SetProperty(PropertyBool.Trophy, true);
-                }
+                    if (Time.GetUnixTime() > TrophyTimer) // If current time is greater than Timer. Allow Trophy drop again.
+                    {
+                        SetProperty(PropertyBool.Trophy, false);
+                    }
+                    else if (Time.GetUnixTime() < TrophyTimer) // If current time is less than Timer. Maintain restriction.
+                    {
+                        SetProperty(PropertyBool.Trophy, true);
+                    }
 
-                if (ThreadSafeRandom.Next(1, 4) == 1 && Level >= 75 && !Trophy) // 25% chance to spawn pk trophy on player corpses.
-                {
-                    pktrophy.Inscribable = true;
-                    pktrophy.LongDesc = $"Character {Name} defeated by {topDamager.Name}";
-                    pktrophy.Inscription = $"I have successfully slain {Name}";
-                    pktrophy.ScribeName = $"{topDamager.Name}";
-                    pktrophy.SetProperty(PropertyInt.Bonded, -1);
-                    TryCreateInInventoryWithNetworking(pktrophy);
-                    SetProperty(PropertyBool.Trophy, true); // Toggle Trophy drop off.
-                    SetProperty(PropertyFloat.TrophyTimer, Time.GetFutureUnixTime(3600)); // Set the cooldown only on trophy generation
+                    if (ThreadSafeRandom.Next(1, 4) == 1 && Level >= 75 && !Trophy) // 25% chance to spawn 10 pk trophy on player corpses.
+                    {
+                        pktrophy.Inscribable = true;
+                        pktrophy.LongDesc = $"Character {Name} defeated by {topDamager.Name}";
+                        pktrophy.Inscription = $"I have successfully slain {Name}";
+                        pktrophy.ScribeName = $"{topDamager.Name}";
+                        pktrophy.SetProperty(PropertyInt.Bonded, -1);
+                        pktrophy.SetStackSize(10);
+                        TryCreateInInventoryWithNetworking(pktrophy);
+                        SetProperty(PropertyBool.Trophy, true); // Toggle Trophy drop off.
+                        SetProperty(PropertyFloat.TrophyTimer, Time.GetFutureUnixTime(3600)); // Set the cooldown only on trophy generation
+                    }
+                    else if (Trophy) // if Trophy is off then send msg to killer telling them no trophy is possible.
+                    {
+                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"{Name} has recently generated a pk trophy. They cannot generate another until after 1 hour has passed.", ChatMessageType.Broadcast));
+                    }
                 }
-                else if (Trophy) // if Trophy is off then send msg to killer telling them no trophy is possible.
-                {
-                    asshole.Session.Network.EnqueueSend(new GameMessageSystemChat($"{Name} has recently generated a pk trophy. They cannot generate another until after 1 hour has passed.", ChatMessageType.Broadcast));
-                }
-
                 if (Level >= 270 && !PKMode)
                 {
                     HandleDeleveling();
@@ -305,192 +308,11 @@ namespace ACE.Server.WorldObjects
 
                     // a player who dies while in pkmode loses 10% of their current level base. Then adds a random number between -5% and +5% to add a more natural xp flow.
                     LoseLevelProportionalXp(0.10 + varyxp, 1, 10000000000);
-
                 }
 
-                var killer = topDamager.TryGetAttacker() as Player;
                 if (killer != null && Level >= 75)
                 {
                     HandleKillStreak(killer);
-                }
-
-                if (PKMode == true && killer.PKMode == true && killer != null)
-                {
-                    // checks for last login ip and create ip to try and deter self farming. Also checks for same Monarch ID
-                    if (killer.Account.LastLoginIP == Account.LastLoginIP || killer.Account.CreateIP == Account.CreateIP)
-                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You won't gain XP killing this character.", ChatMessageType.Broadcast));
-                    else if (killer.Allegiance == Allegiance && Allegiance != null)
-                        killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Allegiance members cannot generate PKMode XP on kill.", ChatMessageType.Broadcast));
-                    else
-                    {
-                        // the first 10 kills go through a system to check against last login ips of the player you are killing to try and detect farming the same account. Cross referencing the victims name AND LastLoginIP
-                        // then shuffles both of them removing the oldest entry. If success will send off the verifykill bool as true and allow xp to be gained for the kill.
-                        bool verifiedkill = false;
-                        string accountIPLastLogin = Account.LastLoginIP.ToString();
-                        if (killer.PlayersKilled1 == null && killer.PlayersKilledIP1 == null)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled1, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP1, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled2 == null && killer.PlayersKilled1 != Name && killer.PlayersKilledIP1 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled2, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP2, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled3 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled3, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP3, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled4 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled4, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP4, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled5 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled5, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP5, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled6 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled6, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP6, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled7 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled7, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP7, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled8 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name
-                            && killer.PlayersKilled7 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin && killer.PlayersKilledIP7 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled8, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP8, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled9 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name
-                            && killer.PlayersKilled7 != Name && killer.PlayersKilled8 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin && killer.PlayersKilledIP7 != accountIPLastLogin && killer.PlayersKilledIP8 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled9, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP9, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else if (killer.PlayersKilled10 == null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name
-                            && killer.PlayersKilled7 != Name && killer.PlayersKilled8 != Name && killer.PlayersKilled9 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin && killer.PlayersKilledIP7 != accountIPLastLogin && killer.PlayersKilledIP8 != accountIPLastLogin && killer.PlayersKilledIP9 != accountIPLastLogin)
-                        {
-                            killer.SetProperty(PropertyString.PlayersKilled10, Name);
-                            killer.SetProperty(PropertyString.PlayersKilledIP10, accountIPLastLogin);
-                            verifiedkill = true;
-                        }
-                        else
-                        {
-                            if (killer.PlayersKilled10 != null && killer.PlayersKilled1 != Name && killer.PlayersKilled2 != Name && killer.PlayersKilled3 != Name && killer.PlayersKilled4 != Name && killer.PlayersKilled5 != Name && killer.PlayersKilled6 != Name && killer.PlayersKilled7 != Name
-                            && killer.PlayersKilled8 != Name && killer.PlayersKilled9 != Name && killer.PlayersKilled10 != Name && killer.PlayersKilledIP1 != accountIPLastLogin && killer.PlayersKilledIP2 != accountIPLastLogin && killer.PlayersKilledIP3 != accountIPLastLogin && killer.PlayersKilledIP4 != accountIPLastLogin && killer.PlayersKilledIP5 != accountIPLastLogin && killer.PlayersKilledIP6 != accountIPLastLogin && killer.PlayersKilledIP7 != accountIPLastLogin && killer.PlayersKilledIP8 != accountIPLastLogin && killer.PlayersKilledIP9 != accountIPLastLogin && killer.PlayersKilledIP10 != accountIPLastLogin)
-                            {
-                                // name shuffle
-
-                                //empty placeholders to place proper strings into
-                                string placeholder1 = null;
-                                string placeholder2 = null;
-                                string placeholder3 = null;
-                                string placeholder4 = null;
-                                string placeholder5 = null;
-                                string placeholder6 = null;
-                                string placeholder7 = null;
-                                string placeholder8 = null;
-                                string placeholder9 = null;
-                                string placeholder10 = null;
-
-
-                                // placeholders hold actual values to avoid data erasure
-                                placeholder1 = killer.PlayersKilled10;
-                                placeholder2 = killer.PlayersKilled9;
-                                placeholder3 = killer.PlayersKilled8;
-                                placeholder4 = killer.PlayersKilled7;
-                                placeholder5 = killer.PlayersKilled6;
-                                placeholder6 = killer.PlayersKilled5;
-                                placeholder7 = killer.PlayersKilled4;
-                                placeholder8 = killer.PlayersKilled3;
-                                placeholder9 = killer.PlayersKilled2;
-                                placeholder10 = killer.PlayersKilled1;
-
-
-                                // placeholders now shuffle the names up the list
-                                killer.PlayersKilled9 = placeholder1;
-                                killer.PlayersKilled8 = placeholder2;
-                                killer.PlayersKilled7 = placeholder3;
-                                killer.PlayersKilled6 = placeholder4;
-                                killer.PlayersKilled5 = placeholder5;
-                                killer.PlayersKilled4 = placeholder6;
-                                killer.PlayersKilled3 = placeholder7;
-                                killer.PlayersKilled2 = placeholder8;
-                                killer.PlayersKilled1 = placeholder9;
-
-                                killer.PlayersKilled10 = Name;
-
-
-                                //empty placeholders to place proper strings into
-                                string placeholderIP1 = null;
-                                string placeholderIP2 = null;
-                                string placeholderIP3 = null;
-                                string placeholderIP4 = null;
-                                string placeholderIP5 = null;
-                                string placeholderIP6 = null;
-                                string placeholderIP7 = null;
-                                string placeholderIP8 = null;
-                                string placeholderIP9 = null;
-                                string placeholderIP10 = null;
-
-                                // add placeholders to hold proper values and avoid accidental data erasure
-                                placeholderIP1 = killer.PlayersKilledIP10;
-                                placeholderIP2 = killer.PlayersKilledIP9;
-                                placeholderIP3 = killer.PlayersKilledIP8;
-                                placeholderIP4 = killer.PlayersKilledIP7;
-                                placeholderIP5 = killer.PlayersKilledIP6;
-                                placeholderIP6 = killer.PlayersKilledIP5;
-                                placeholderIP7 = killer.PlayersKilledIP4;
-                                placeholderIP8 = killer.PlayersKilledIP3;
-                                placeholderIP9 = killer.PlayersKilledIP2;
-                                placeholderIP10 = killer.PlayersKilledIP1;
-
-                                // ip shuffle
-                                // carry over the proper values from placeholders and shuffle upwards in list
-                                killer.PlayersKilledIP9 = placeholderIP1;
-                                killer.PlayersKilledIP8 = placeholderIP2;
-                                killer.PlayersKilledIP7 = placeholderIP3;
-                                killer.PlayersKilledIP6 = placeholderIP4;
-                                killer.PlayersKilledIP5 = placeholderIP5;
-                                killer.PlayersKilledIP4 = placeholderIP6;
-                                killer.PlayersKilledIP3 = placeholderIP7;
-                                killer.PlayersKilledIP2 = placeholderIP8;
-                                killer.PlayersKilledIP1 = placeholderIP9;
-
-                                killer.PlayersKilledIP10 = accountIPLastLogin;
-
-                                verifiedkill = true;
-                            }
-                            else
-                            {
-                                killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have not met the required prerequisites to earn PKMode XP, you must seek out new targets to gain PKMode XP.", ChatMessageType.Broadcast));
-                                verifiedkill = false;
-                            }
-                        }
-
-                        if (verifiedkill)
-                        {
-                            var xpvariance = ThreadSafeRandom.Next(0.02f, 0.05f);
-
-                            killer.GrantLevelProportionalXp(xpvariance, 1, 2000000000);
-                        }
-                    }
                 }
             }
 
