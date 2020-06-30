@@ -1916,7 +1916,7 @@ namespace ACE.Server.Command.Handlers
         }
 
 
-        [CommandHandler("modifyvital", AccessLevel.Admin, CommandHandlerFlag.None, 2, "Adjusts the maximum vital attribute for the last appraised mob/player and restores full vitals", "<Health|Stamina|Mana> <delta>")]
+        [CommandHandler("modifyvital", AccessLevel.Developer, CommandHandlerFlag.None, 2, "Adjusts the maximum vital attribute for the last appraised mob/player and restores full vitals", "<Health|Stamina|Mana> <delta>")]
         public static void HandleModifyVital(Session session, params string[] parameters)
         {
             var lastAppraised = CommandHandlerHelper.GetLastAppraisedObject(session);
@@ -1986,7 +1986,7 @@ namespace ACE.Server.Command.Handlers
             }
         }
 
-        [CommandHandler("modifyskill", AccessLevel.Admin, CommandHandlerFlag.None, 2, "Adjusts the skill for the last appraised mob/player", "<skillName> <delta>")]
+        [CommandHandler("modifyskill", AccessLevel.Developer, CommandHandlerFlag.None, 2, "Adjusts the skill for the last appraised mob/player", "<skillName> <delta>")]
         public static void HandleModifySkill(Session session, params string[] parameters)
         {
             var lastAppraised = CommandHandlerHelper.GetLastAppraisedObject(session);
@@ -2029,7 +2029,7 @@ namespace ACE.Server.Command.Handlers
             }
         }
 
-        [CommandHandler("modifyattr", AccessLevel.Admin, CommandHandlerFlag.None, 2, "Adjusts an attribute for the last appraised mob/NPC/player", "<attribute> <delta>")]
+        [CommandHandler("modifyattr", AccessLevel.Developer, CommandHandlerFlag.None, 2, "Adjusts an attribute for the last appraised mob/NPC/player", "<attribute> <delta>")]
         public static void HandleModifyAttribute(Session session, params string[] parameters)
         {
             var lastAppraised = CommandHandlerHelper.GetLastAppraisedObject(session);

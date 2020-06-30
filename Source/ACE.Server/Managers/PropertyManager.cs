@@ -492,6 +492,7 @@ namespace ACE.Server.Managers
                 ("assess_creature_mod", new Property<bool>(false, "(non-retail function) If enabled, re-enables former skill formula, when assess creature skill is not trained or spec'ed")),
                 ("chess_enabled", new Property<bool>(true, "if FALSE then chess will be disabled")),
                 ("client_movement_formula", new Property<bool>(false, "If enabled, server uses DoMotion/StopMotion self-client movement methods instead of apply_raw_movement")),
+                ("command_pop_enabled", new Property<bool>(true, "If enabled, the server will report population numbers when requested.")),
                 ("container_opener_name", new Property<bool>(false, "If enabled, when a player tries to open a container that is already in use by someone else, replaces 'someone else' in the message with the actual name of the player")),
                 ("corpse_decay_tick_logging", new Property<bool>(false, "If ENABLED then player corpse ticks will be logged")),
                 ("corpse_destroy_pyreals", new Property<bool>(true, "If FALSE then pyreals will not be completely destroyed on player death")),
@@ -527,6 +528,7 @@ namespace ACE.Server.Managers
                 ("runrate_add_hooks", new Property<bool>(false, "if TRUE, adds some runrate hooks that were missing from retail (exhaustion done, raise skill/attribute")),
                 ("require_spell_comps", new Property<bool>(true, "if FALSE spell components are no longer required to be in inventory to cast spells. defaults to enabled, as in retail")),
                 ("salvage_handle_overages", new Property<bool>(false, "in retail, if 2 salvage bags were combined beyond 100 structure, the overages would be lost")),
+                ("shields_allow_noncombat_mode_if_specialized", new Property<bool>(false, "If true, shields will be usable out of combat mode if the wielder has the shield skill specialized.")),
                 ("show_dat_warning", new Property<bool>(false, "if TRUE, will alert player (dat_warning_msg) when client attempts to download from server and boot them from game, disabled by default")),
                 ("show_dot_messages", new Property<bool>(false, "enabled, shows combat messages for DoT damage ticks. defaults to disabled, as in retail")),
                 ("show_mana_conv_bonus_0", new Property<bool>(true, "if disabled, only shows mana conversion bonus if not zero, during appraisal of casting items")),
@@ -554,7 +556,8 @@ namespace ACE.Server.Managers
                 ("rares_max_seconds_between", new Property<long>(5256000, "for rares_real_time: the maximum number of seconds a player can go before a second chance at a rare is allowed on rare eligible creature kills that did not generate a rare")),
                 ("teleport_visibility_fix", new Property<long>(0, "Fixes some possible issues with invisible players and mobs. 0 = default / disabled, 1 = players only, 2 = creatures, 3 = all world objects")),
                 ("ignore_burden_below_character_level", new Property<long>(100, "The minimum character level at which burden will start to apply. Retail defaults to 0.")),
-                ("pk_logout_timer_min_level", new Property<long>(100, "The minimum character level for which the pk logout timer will apply."))
+                ("pk_logout_timer_min_level", new Property<long>(100, "The minimum character level for which the pk logout timer will apply.")),
+                ("turbine_chat_min_level", new Property<long>(1, "Minimum character level to use global chat channels (General, LFG, Roleplay, Trade, Olthoi, Society, Allegience)"))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<double>> DefaultDoubleProperties =
@@ -564,7 +567,6 @@ namespace ACE.Server.Managers
                 ("major_cantrip_drop_rate", new Property<double>(1.0, "Modifier for major cantrip drop rate, 1 being normal")),
                 ("epic_cantrip_drop_rate", new Property<double>(1.0, "Modifier for epic cantrip drop rate, 1 being normal")),
                 ("legendary_cantrip_drop_rate", new Property<double>(1.0, "Modifier for legendary cantrip drop rate, 1 being normal")),
-
                 ("advocate_fane_auto_bestow_level", new Property<double>(1, "the level that advocates are automatically bestowed by Advocate Fane if advocate_fane_auto_bestow is true")),
                 ("aetheria_drop_rate", new Property<double>(1.0, "Modifier for Aetheria drop rate, 1 being normal")),
                 ("chess_ai_start_time", new Property<double>(-1.0, "the number of seconds for the chess ai to start. defaults to -1 (disabled)")),
@@ -574,10 +576,15 @@ namespace ACE.Server.Managers
                 ("fast_missile_modifier", new Property<double>(1.2, "The speed multiplier applied to fast missiles. Defaults to retail value of 1.2")),
                 ("ignore_magic_armor_pvp_scalar", new Property<double>(1.0, "Scales the effectiveness of IgnoreMagicArmor (ie. hollow weapons) in pvp battles. 1.0 = full effectiveness / ignore all enchantments on armor (default), 0.5 = half effectiveness / use half enchantments from armor, 0.0 = no effectiveness / use full enchantments from armor")),
                 ("ignore_magic_resist_pvp_scalar", new Property<double>(1.0, "Scales the effectiveness of IgnoreMagicResist (ie. hollow weapons) in pvp battles. 1.0 = full effectiveness / ignore all resistances from life enchantments (default), 0.5 = half effectiveness / use half resistances from life enchantments, 0.0 = no effectiveness / use full resistances from life enchantments")),
+                ("imbue_crippling_blow_magic_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for magic attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
+                ("imbue_crippling_blow_melee_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for melee attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
+                ("imbue_crippling_blow_missile_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for missile attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
                 ("luminance_modifier", new Property<double>(1.0, "Scales the amount of luminance received by players")),
                 ("mob_awareness_range", new Property<double>(1.0, "Scales the distance the monsters become alerted and aggro the players")),
                 ("pk_new_character_grace_period", new Property<double>(300, "the number of seconds, in addition to pk_respite_timer, that a player killer is set to non-player killer status after first exiting training academy")),
                 ("pk_respite_timer", new Property<double>(300, "the number of seconds that a player killer is set to non-player killer status after dying to another player killer")),
+                ("pvp_melee_weapon_damage_modifier", new Property<double>(1.0, "Scales melee weapon damage for PvP")),
+                ("pvp_missile_weapon_damage_modifier", new Property<double>(1.0, "Scales missile weapon damage for PvP")),
                 ("quest_mindelta_rate", new Property<double>(1.0, "scales all quest min delta time between solves, 1 being normal")),
                 ("spellcast_max_angle", new Property<double>(5.0, "for advanced player spell casting, the maximum angle to target release a spell projectile. retail seemed to default to a lower 5-20 value here, although some players seem to prefer a higher 45 degree angle")),
                 ("trophy_drop_rate", new Property<double>(1.0, "Modifier for trophies dropped on creature death")),

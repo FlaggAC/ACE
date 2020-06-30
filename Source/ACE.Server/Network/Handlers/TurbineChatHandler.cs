@@ -34,6 +34,16 @@ namespace ACE.Server.Network.Handlers
                 return;
             }
 
+            var minlevel = PropertyManager.GetLong("turbine_chat_min_level").Item;
+            if (session.Player.Level < minlevel
+                && session.Player.Enlightenment == 0
+                && session.AccessLevel == AccessLevel.Player)
+            {
+                var msg = $"You may not speak on this channel until you have reached character level {minlevel}.";
+                session.Network.EnqueueSend(new GameEvent.Events.GameEventCommunicationTransientString(session, msg), new GameMessageSystemChat(msg, ChatMessageType.WorldBroadcast));
+                return;
+            }
+
             if (chatBlobType == ChatNetworkBlobType.NETBLOB_REQUEST_BINARY)
             {
                 var contextId = clientMessage.Payload.ReadUInt32(); // 0x01 - 0x71 (maybe higher), typically though 0x01 - 0x0F

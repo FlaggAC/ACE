@@ -136,7 +136,7 @@ namespace ACE.Server.Managers
             // Wait for all players to log out
             var logUpdateTS = DateTime.MinValue;
             int playerCount;
-            while ((playerCount = PlayerManager.GetOnlineCount()) > 0)
+            while ((playerCount = PlayerManager.GetActualOnlineCount()) > 0)
             {
                 logUpdateTS = LogStatusUpdate(logUpdateTS, $"Waiting for {playerCount} player{(playerCount > 1 ? "s" : "")} to log off...");
                 Thread.Sleep(10);
