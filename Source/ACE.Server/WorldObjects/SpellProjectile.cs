@@ -587,7 +587,8 @@ namespace ACE.Server.WorldObjects
                         shield = target.GetEquippedShield();
                         if (shield != null && shield.AbsorbMagicDamage != null)
                         {
-                            if (target.Skills[Skill.Shield].AdvancementClass == SkillAdvancementClass.Specialized)
+                            var hasShield = target.Skills?.ContainsKey(Skill.Shield);
+                            if (hasShield == true && target.Skills[Skill.Shield]?.AdvancementClass == SkillAdvancementClass.Specialized)
                                 return GetShieldMod(target, shield);
                         }
                     }

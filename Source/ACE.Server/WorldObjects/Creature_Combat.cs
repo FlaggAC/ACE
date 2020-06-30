@@ -647,7 +647,10 @@ namespace ACE.Server.WorldObjects
             // ensure combat stance
             bool specShieldAllowsNoncombat = PropertyManager.GetBool("shields_allow_noncombat_mode_if_specialized").Item;
             bool noncombat = CombatMode == CombatMode.NonCombat;
-            bool isSpec = this.Skills[Skill.Shield].AdvancementClass == SkillAdvancementClass.Specialized;
+
+            var hasShield = this.Skills?.ContainsKey(Skill.Shield);
+            bool isSpec = hasShield == true && this.Skills[Skill.Shield]?.AdvancementClass == SkillAdvancementClass.Specialized;
+
             if (noncombat)
             {
                 if (!specShieldAllowsNoncombat || !isSpec)
