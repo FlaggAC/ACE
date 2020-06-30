@@ -6,6 +6,7 @@ using ACE.Entity.Enum.Properties;
 using ACE.Server.Entity;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects.Entity;
+using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 
 namespace ACE.Server.WorldObjects
 {
@@ -659,17 +660,20 @@ namespace ACE.Server.WorldObjects
             var baseSkill = GetBaseSkillImbued(skill);
 
             var baseMod = 1.0f;
-
+            float cbmultiplier;
             switch(GetImbuedSkillType(skill))
             {
                 case ImbuedSkillType.Melee:
-                    baseMod = Math.Max(0, baseSkill - 40) / 90.0f; // 4x
+                    cbmultiplier = (float)Server.Managers.PropertyManager.GetDouble("imbue_crippling_blow_melee_scalar").Item;
+                    baseMod = cbmultiplier * (Math.Max(0, baseSkill - 40) / 360.0f);
                     break;
-
                 case ImbuedSkillType.Missile:
+                    cbmultiplier = (float)Server.Managers.PropertyManager.GetDouble("imbue_crippling_blow_missile_scalar").Item;
+                    baseMod = cbmultiplier * (baseSkill / 360.0f); // old 60 = 6x, 90 = 4x
+                    break;
                 case ImbuedSkillType.Magic:
-
-                    baseMod = baseSkill / 90.0f; // old 60 = 6x, 90 = 4x
+                    cbmultiplier = (float)Server.Managers.PropertyManager.GetDouble("imbue_crippling_blow_magic_scalar").Item;
+                    baseMod = cbmultiplier * (baseSkill / 360.0f); // old 60 = 6x, 90 = 4x
                     break;
             }
 
