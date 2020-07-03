@@ -10,6 +10,7 @@ using ACE.Entity.Models;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects;
+using System.Configuration;
 
 namespace ACE.Server.Entity
 {
@@ -555,10 +556,21 @@ namespace ACE.Server.Entity
             }
 
             // damage mitigation
+            var armorRendingMod = 1.0f;
+            if (Weapon != null && Weapon.HasImbuedEffect(ImbuedEffectType.ArmorRending))
+                armorRendingMod = WorldObject.GetArmorRendingMod(attackSkill);
+            var armorCleavingMod = Attacker.GetArmorCleavingMod(Weapon);
+            var ignoreArmorMod = Math.Min(armorRendingMod, armorCleavingMod);
+
+            info += $"ArmorRendMod: {armorRendingMod}\n";
+            info += $"ArmorCleavingMod: {armorCleavingMod}\n";
+            info += $"IgnoreArmorMod: {ignoreArmorMod}\n";
             info += $"ArmorMod: {ArmorMod}\n";
-            info += $"ResistanceMod: {ResistanceMod}\n";
-            info += $"ShieldMod: {ShieldMod}\n";
+
             info += $"WeaponResistanceMod: {WeaponResistanceMod}\n";
+            info += $"ResistanceMod: {ResistanceMod}\n";
+
+            info += $"ShieldMod: {ShieldMod}\n";
 
             info += $"DamageResistanceRatingMod: {DamageResistanceRatingMod}\n";
 
@@ -570,7 +582,10 @@ namespace ACE.Server.Entity
             // final damage
             info += $"DamageBeforeMitigation: {DamageBeforeMitigation}\n";
             info += $"DamageMitigated: {DamageMitigated}\n";
-            info += $"Damage: {Damage}\n";
+            info += $"Damage: {Damage}\n \n";
+
+            info += $"DamageBeforeMitigationFormula: {DamageBeforeMitigation} = BaseDmg:{BaseDamage} * AttrbMod:{AttributeMod} * PowerMod:{PowerMod} * SlayerMod:{SlayerMod} * DmgRatMod:{DamageRatingBaseMod}\n";
+            info += $"DamageFormula: {Damage} = DmgBeforeMit:{DamageBeforeMitigation} * ArmorMod:{ArmorMod} * ShieldMod:{ShieldMod} * ResistMod:{ResistanceMod} * DmgResistRatMod:{DamageResistanceRatingMod}\n";
 
             info += "----";
 
