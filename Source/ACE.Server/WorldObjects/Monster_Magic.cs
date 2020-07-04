@@ -95,7 +95,12 @@ namespace ACE.Server.WorldObjects
                 if (rng < probability)
                 {
                     CurrentSpell = spell;
-                    return new Spell(spell.Key);
+                    var spellObj = new Spell(spell.Key);
+                    if (spellObj._spell == null || spellObj._spellBase == null)
+                    {
+                        log.Warn($"Cannot load spell ID {spell.Key} from wcid {this.WeenieClassId}");
+                        return null;
+                    }
                 }
             }
 
