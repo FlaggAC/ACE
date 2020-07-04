@@ -141,6 +141,10 @@ namespace ACE.Server.WorldObjects
 
             //HandleMissingXp();
             HandleSkillCreditRefund();
+            HandleSkillTemplesReset();
+            HandleSkillSpecCreditRefund();
+            HandleFreeSkillResetRenewal();
+            HandleFreeAttributeResetRenewal();
 
             if (PlayerKillerStatus == PlayerKillerStatus.PKLite && !PropertyManager.GetBool("pkl_server").Item)
             {

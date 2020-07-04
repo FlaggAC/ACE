@@ -197,7 +197,7 @@ namespace ACE.Server.WorldObjects
                 //else if (PropertyManager.GetBool("pkl_server").Item)
                 //    playerPkLevel = PKLevel.PKLite;
 
-                if (PortalRestrictions == PortalBitmask.NotPassable)
+                if (PortalRestrictions == PortalBitmask.Undef)
                 {
                     // Players may not interact with that portal.
                     return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.PlayersMayNotUsePortal));
@@ -300,6 +300,8 @@ namespace ACE.Server.WorldObjects
                     player.LastPortalDID = OriginalPortal == null ? WeenieClassId : OriginalPortal; // if walking through a summoned portal
 
                 EmoteManager.OnPortal(player);
+
+                player.SendWeenieError(WeenieError.ITeleported);
             }));
         }
     }
