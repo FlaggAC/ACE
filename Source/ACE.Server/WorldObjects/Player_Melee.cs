@@ -304,29 +304,27 @@ namespace ACE.Server.WorldObjects
                         return;
                     }
 
-
                     if (creature.Warded && creature.TogglePhys)
                     {
                         Session.Network.EnqueueSend(new GameMessageSystemChat($"{creature.Name} resists your attack completely", ChatMessageType.CombatEnemy));
                         return;
                     }
-                    else
-                    {
-                        var damageEvent = DamageTarget(creature, weapon);
 
-                        // handle target procs
-                        if (damageEvent != null && damageEvent.HasDamage && !targetProc)
-                        {
-                            TryProcEquippedItems(creature, false);
-                            targetProc = true;
-                        }
+                    var damageEvent = DamageTarget(creature, weapon);
+
+                    // handle target procs
+                    if (damageEvent != null && damageEvent.HasDamage && !targetProc)
+                    {
+                        TryProcEquippedItems(creature, false);
+                        targetProc = true;
+                    }
 
                     if (swingNum == 0 && weapon != null && weapon.IsCleaving)
                         cleave = GetCleaveTarget(creature, weapon);
 
                     if (cleave != null)
-                        {
-                            foreach (var cleaveHit in cleave)
+                    {
+                        foreach (var cleaveHit in cleave)
                         {
                             if (swingNum == 0 || IsCleaveable(cleaveHit))
                                 DamageTarget(cleaveHit, weapon);

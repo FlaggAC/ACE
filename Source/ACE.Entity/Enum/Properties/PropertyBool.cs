@@ -179,17 +179,19 @@ namespace ACE.Entity.Enum.Properties
         IsEnvoy                          = 9005,
         [ServerOnly]
         UnspecializedSkills              = 9006,
+        [ServerOnly]
         Trophy                           = 9105,
         [ServerOnly]
-        [ServerOnly]
         FreeSkillResetRenewed            = 9007,
-        NetherFix                        = 9106,
         [ServerOnly]
+        NetherFix                        = 9106,
         [ServerOnly]
         FreeAttributeResetRenewed        = 9008,
         [ServerOnly]
-        [ServerOnly]
         SkillTemplesTimerReset           = 9009,
+        [ServerOnly]
+        EliteTrigger                     = 9107,
+        [ServerOnly]
         IsElite                          = 9108,
         [ServerOnly]
         SplitMod                         = 9109,
