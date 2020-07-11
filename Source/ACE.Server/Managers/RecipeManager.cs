@@ -404,14 +404,10 @@ namespace ACE.Server.Managers
 
             var xtramodroll = ThreadSafeRandom.Next(1, 300); // helps determine which mod occurs
             var alamountlow = ThreadSafeRandom.Next(10, 30); // common base bonus AL
-            var cfal = ThreadSafeRandom.Next(1, 25); // critical fail AL amount
             var modchance = ThreadSafeRandom.Next(1, 200);// the chance that a mod even will roll
             var resistroll = ThreadSafeRandom.Next(1, 187);
             var meleedmg = ThreadSafeRandom.Next(2, 6); // the roll for flat dmg for iron
-            var cfaldmg = ThreadSafeRandom.Next(1, 3); //1min 3 max loss to dmg if critical fail
             var bowmoddmg = ThreadSafeRandom.Next(0.01f, 0.02f); // 1-2% bonus
-            var bowmodfail = ThreadSafeRandom.Next(0.01f, 0.05f); // 1-5% failure amount
-            var wandmodfail = ThreadSafeRandom.Next(0.001f, 0.007f); // .1% - .7% failure
             var wanddamage = ThreadSafeRandom.Next(0.001f, 0.004f); // .1% - .4% bonus
             var splitmodchance = ThreadSafeRandom.Next(1, 187);
             var retainlore = target.GetProperty(PropertyInt.ItemDifficulty); // ensure that the lore difficulty doesnt increase when spells are added.
@@ -481,8 +477,8 @@ namespace ACE.Server.Managers
                         }
                         else if (xtramodroll >= 252 && xtramodroll <= 297)
                         {
-                            target.ArmorLevel -= cfal;
-                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Rolled {xtramodroll}. Critical failure! You lost {cfal} to your {target.NameWithMaterial} total AL. New Target AL {target.ArmorLevel}(-{cfal}).", ChatMessageType.Broadcast));
+                            target.ArmorLevel += 25;
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"No mod chance roll. Better luck next time. New Target AL {target.ArmorLevel}(+25)", ChatMessageType.Broadcast));
                         }
 
                         else if (xtramodroll == 298)
@@ -712,15 +708,8 @@ namespace ACE.Server.Managers
                         // fail roll
                         else if (xtramodroll >= 181 && xtramodroll <= 190)
                         {
-                            if (target.GetProperty(PropertyFloat.ElementalDamageMod) == null)
-                            {
-                                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Rolled {xtramodroll}. Critical failure! The salvage applies poorly and does nothing!", ChatMessageType.Broadcast));
-                            }
-                            else
-                            {
-                                target.ElementalDamageMod -= wandmodfail;
-                                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Rolled {xtramodroll}. Critical failure! You lost {wandmodfail:N3}% to your {target.NameWithMaterial}.", ChatMessageType.Broadcast));
-                            }
+                            target.ElementalDamageMod += 0.01f;
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"No mod chance roll. Better luck next time.", ChatMessageType.Broadcast));
                         }// 3%
                         // choose 1 mag d, melee d, Elemental Dmg.
                         else if (xtramodroll >= 191 && xtramodroll <= 209)
@@ -1474,11 +1463,10 @@ namespace ACE.Server.Managers
                             player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Rolled {xtramodroll}. Not so lucky, but you also gained {meleedmg} extra Flat damage! New Target Damage {target.Damage}(+{dmgresult}){variancenote}", ChatMessageType.Broadcast));
 
                         }// 60%
-                        // fail roll
                         else if (xtramodroll >= 181 && xtramodroll <= 190)
                         {
-                            target.Damage -= cfaldmg;
-                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Rolled {xtramodroll}. Critical failure! You lost {cfaldmg} to your {target.NameWithMaterial} total Damage. New Target Damage {target.Damage}(-{cfaldmg}).", ChatMessageType.Broadcast));
+                            target.Damage += 3;
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"No mod chance roll. Better luck next time. New Target Damage {target.Damage}(+3)", ChatMessageType.Broadcast));
                         }// 3%
                         // choose 1 mag d, melee d, attack mod.
                         else if (xtramodroll >= 191 && xtramodroll <= 209)
@@ -2397,18 +2385,12 @@ namespace ACE.Server.Managers
                     if (modchance <= 60) // 30% chance to even roll a mod to begin with
                     {
                         // basic roll + 1-4 flat dmg
-                        if (xtramodroll <= 180) // 33.3%
+                        if (xtramodroll <= 190) // 33.3%
                         {
                             var dmgresult = 0.04f + bowmoddmg;
                             target.DamageMod += 0.04f + bowmoddmg;
                             player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Rolled {xtramodroll}. Not so lucky, but you also gained {bowmoddmg:N2} extra Bow Damage Modifier! New Target Damage Mod {target.DamageMod:N2}(+{dmgresult:N2})", ChatMessageType.Broadcast));
                         }// 60%
-                        // fail roll
-                        else if (xtramodroll >= 181 && xtramodroll <= 190)
-                        {
-                            target.DamageMod -= bowmodfail;
-                            player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Rolled {xtramodroll}. Critical failure! You lost {bowmodfail:N2}% to your {target.NameWithMaterial}. New Target Damage {target.DamageMod:N2}(-{bowmodfail:N2}%).", ChatMessageType.Broadcast));
-                        }// 3%
                         // choose 1 mag d, melee d, Elemental Dmg.
                         else if (xtramodroll >= 191 && xtramodroll <= 209)
                         {
