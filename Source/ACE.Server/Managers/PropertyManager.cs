@@ -603,7 +603,8 @@ namespace ACE.Server.Managers
                 ("life_spell_damage_modifier", new Property<double>(1.0, "Scales life Projectile magics damage for PVP")),
                 ("war_streak_spell_damage_modifier", new Property<double>(1.0, "Scales war streak Projectile magics damage for PVP")),
                 ("lotto_hollow_scaler", new Property<double>(1.0, "scales hollow lotto procs")),
-                ("void_streak_spell_damage_modifier", new Property<double>(1.0, "Scales void streak Projectile magics damage for PVP"))
+                ("void_streak_spell_damage_modifier", new Property<double>(1.0, "Scales void streak Projectile magics damage for PVP")),
+                ("consumable_speed_modifier", new Property<double>(1.0, "Scales consumable animation speed. Allows players to eat or drink at a faster rate if set to a higher number."))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<string>> DefaultStringProperties =
