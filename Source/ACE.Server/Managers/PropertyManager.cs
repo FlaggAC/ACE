@@ -557,7 +557,8 @@ namespace ACE.Server.Managers
                 ("teleport_visibility_fix", new Property<long>(0, "Fixes some possible issues with invisible players and mobs. 0 = default / disabled, 1 = players only, 2 = creatures, 3 = all world objects")),
                 ("ignore_burden_below_character_level", new Property<long>(100, "The minimum character level at which burden will start to apply. Retail defaults to 0.")),
                 ("pk_logout_timer_min_level", new Property<long>(100, "The minimum character level for which the pk logout timer will apply.")),
-                ("turbine_chat_min_level", new Property<long>(1, "Minimum character level to use global chat channels (General, LFG, Roleplay, Trade, Olthoi, Society, Allegience)"))
+                ("turbine_chat_min_level", new Property<long>(1, "Minimum character level to use global chat channels (General, LFG, Roleplay, Trade, Olthoi, Society, Allegience)")),
+                ("arcane_lore_bypass_level", new Property<long>(391, "Minimum arcane lore buffed skill level at which the player can bypass all lore requirements on equip."))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<double>> DefaultDoubleProperties =
