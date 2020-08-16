@@ -363,6 +363,8 @@ namespace ACE.Server.Network.Structure
 
             if (wo.ItemSkillLimit != null)
                 PropertiesInt[PropertyInt.AppraisalItemSkill] = (int)wo.ItemSkillLimit;
+            else
+                PropertiesInt.Remove(PropertyInt.AppraisalItemSkill);
 
             if (PropertiesInt.TryGetValue(PropertyInt.MaterialType, out var materialType) && ((MaterialType)materialType).IsCustom())
                 PropertiesInt.Remove(PropertyInt.MaterialType);
@@ -408,6 +410,20 @@ namespace ACE.Server.Network.Structure
                     ResistColor = ResistMaskHelper.GetColorMask(wielder, wo);
                 }
             }
+
+            var appraisalLongDescDecoration = AppraisalLongDescDecorations.None;
+
+            if (wo.ItemWorkmanship > 0)
+                appraisalLongDescDecoration |= AppraisalLongDescDecorations.PrependWorkmanship;
+            if (wo.MaterialType > 0)
+                appraisalLongDescDecoration |= AppraisalLongDescDecorations.PrependMaterial;
+            if (wo.GemType > 0 && wo.GemCount > 0)
+                appraisalLongDescDecoration |= AppraisalLongDescDecorations.AppendGemInfo;
+
+            if (appraisalLongDescDecoration > 0)
+                PropertiesInt[PropertyInt.AppraisalLongDescDecoration] = (int)appraisalLongDescDecoration;
+            else
+                PropertiesInt.Remove(PropertyInt.AppraisalLongDescDecoration);
         }
 
         private void BuildSpells(WorldObject wo)
@@ -550,7 +566,8 @@ namespace ACE.Server.Network.Structure
             ResistHighlight = ResistMaskHelper.GetHighlightMask(creature);
             ResistColor = ResistMaskHelper.GetColorMask(creature);
 
-            ArmorLevels = new ArmorLevel(creature);
+            if (creature is Player || !creature.Attackable)
+                ArmorLevels = new ArmorLevel(creature);
 
             AddRatings(creature);
 

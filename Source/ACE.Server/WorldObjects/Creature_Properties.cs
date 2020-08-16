@@ -355,6 +355,56 @@ namespace ACE.Server.WorldObjects
             set { if (!value) RemoveProperty(PropertyBool.ToggleMis); else SetProperty(PropertyBool.ToggleMis, value); }
         }
         public bool ToggleSpell
+
+        public int? Faction2Bits
+        {
+            get => GetProperty(PropertyInt.Faction2Bits);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.Faction2Bits); else SetProperty(PropertyInt.Faction2Bits, value.Value); }
+        }
+
+        public int? Faction3Bits
+        {
+            get => GetProperty(PropertyInt.Faction3Bits);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.Faction3Bits); else SetProperty(PropertyInt.Faction3Bits, value.Value); }
+        }
+
+        public int? Hatred1Bits
+        {
+            get => GetProperty(PropertyInt.Hatred1Bits);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.Hatred1Bits); else SetProperty(PropertyInt.Hatred1Bits, value.Value); }
+        }
+
+        public int? Hatred2Bits
+        {
+            get => GetProperty(PropertyInt.Hatred2Bits);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.Hatred2Bits); else SetProperty(PropertyInt.Hatred2Bits, value.Value); }
+        }
+
+        public int? Hatred3Bits
+        {
+            get => GetProperty(PropertyInt.Hatred3Bits);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.Hatred3Bits); else SetProperty(PropertyInt.Hatred3Bits, value.Value); }
+        }
+
+        public int? SocietyRankCelhan
+        {
+            get => GetProperty(PropertyInt.SocietyRankCelhan);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.SocietyRankCelhan); else SetProperty(PropertyInt.SocietyRankCelhan, value.Value); }
+        }
+
+        public int? SocietyRankEldweb
+        {
+            get => GetProperty(PropertyInt.SocietyRankEldweb);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.SocietyRankEldweb); else SetProperty(PropertyInt.SocietyRankEldweb, value.Value); }
+        }
+
+        public int? SocietyRankRadblo
+        {
+            get => GetProperty(PropertyInt.SocietyRankRadblo);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.SocietyRankRadblo); else SetProperty(PropertyInt.SocietyRankRadblo, value.Value); }
+        }
+
+        public FactionBits Society => (FactionBits?)Faction1Bits ?? 0;
         {
             get => GetProperty(PropertyBool.ToggleSpell) ?? false;
             set { if (!value) RemoveProperty(PropertyBool.ToggleSpell); else SetProperty(PropertyBool.ToggleSpell, value); }
