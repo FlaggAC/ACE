@@ -1105,7 +1105,6 @@ namespace ACE.Server.Factories
             else if (nonCantripChance <= 99700)
                 numNonCantrips = 5;
             else if (nonCantripChance <= 99935)
-                    numEpics = GetNumEpicCantrips(profile);
                 numNonCantrips = 6;
             else
                 numNonCantrips = 7;
