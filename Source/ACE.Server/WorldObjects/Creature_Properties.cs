@@ -355,6 +355,7 @@ namespace ACE.Server.WorldObjects
             set { if (!value) RemoveProperty(PropertyBool.ToggleMis); else SetProperty(PropertyBool.ToggleMis, value); }
         }
 
+        public FactionBits? Faction1Bits
         {
             get => (FactionBits?)GetProperty(PropertyInt.Faction1Bits);
             set { if (!value.HasValue) RemoveProperty(PropertyInt.Faction1Bits); else SetProperty(PropertyInt.Faction1Bits, (int)value); }
