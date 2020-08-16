@@ -162,7 +162,7 @@ namespace ACE.Server.Factories
             wo.Value = value;
 
             int wield;
-            if (profile.Tier >= 6 && armorType != LootTables.ArmorType.CovenantArmor)
+            if (profile.Tier >= 6 && armorType != LootTables.ArmorType.CovenantArmor && armorType != LootTables.ArmorType.OlthoiArmor)
             {
                 wo.WieldRequirements = WieldRequirement.Level;
                 wo.WieldSkillType = (int)Skill.Axe;  // Set by examples from PCAP data
@@ -177,7 +177,7 @@ namespace ACE.Server.Factories
                 wo.WieldDifficulty = wield;
             }
 
-            if (armorType == LootTables.ArmorType.CovenantArmor)
+            if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
             {
                 int chance = ThreadSafeRandom.Next(1, 3);
                 var wieldSkill = chance switch
@@ -206,8 +206,8 @@ namespace ACE.Server.Factories
 
             if (isMagical)
             {
-                bool covenantArmor = false || (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor);
-                wo = AssignMagic(wo, profile, covenantArmor);
+                //bool covenantArmor = false || (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor);
+                wo = AssignMagic(wo, profile, true);
             }
             else
             {
@@ -608,7 +608,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(46, 69);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(90, 130);
 
                             else
@@ -624,7 +624,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(69, 92);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(130, 170);
 
                             else
@@ -640,7 +640,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(92, 115);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(170, 210);
 
                             else
@@ -656,7 +656,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(115, 138);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(210, 250);
 
                             else
@@ -672,7 +672,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(138, 161);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(250, 290);
 
                             else
@@ -688,7 +688,7 @@ namespace ACE.Server.Factories
                                 || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(161, 184);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(290, 330);
 
                             else if (armorType == LootTables.ArmorType.SocietyArmor)

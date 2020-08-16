@@ -355,10 +355,9 @@ namespace ACE.Server.WorldObjects
             set { if (!value) RemoveProperty(PropertyBool.ToggleMis); else SetProperty(PropertyBool.ToggleMis, value); }
         }
 
-        public int? Faction1Bits
         {
-            get => GetProperty(PropertyInt.Faction1Bits);
-            set { if (!value.HasValue) RemoveProperty(PropertyInt.Faction1Bits); else SetProperty(PropertyInt.Faction1Bits, value.Value); }
+            get => (FactionBits?)GetProperty(PropertyInt.Faction1Bits);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.Faction1Bits); else SetProperty(PropertyInt.Faction1Bits, (int)value); }
         }
         public int? Faction2Bits
         {
@@ -408,7 +407,7 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyInt.SocietyRankRadblo); else SetProperty(PropertyInt.SocietyRankRadblo, value.Value); }
         }
 
-        public FactionBits Society => (FactionBits?)Faction1Bits ?? 0;
+        public FactionBits Society => Faction1Bits ?? FactionBits.None;
 
         public bool ToggleSpell
         {
