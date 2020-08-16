@@ -103,7 +103,7 @@ namespace ACE.Server.WorldObjects
         public void RecalculateDecayTime(Player player)
         {
             // empty corpses decay faster
-            if (Inventory.Count == 0 || player.DeathCount > 3)
+            if (Inventory.Count == 0)
                 TimeToRot = EmptyDecayTime;
             else
                 // a player corpse decays after 5 mins * playerLevel with a minimum of 1 hour

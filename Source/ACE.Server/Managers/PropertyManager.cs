@@ -557,7 +557,8 @@ namespace ACE.Server.Managers
                 ("teleport_visibility_fix", new Property<long>(0, "Fixes some possible issues with invisible players and mobs. 0 = default / disabled, 1 = players only, 2 = creatures, 3 = all world objects")),
                 ("ignore_burden_below_character_level", new Property<long>(100, "The minimum character level at which burden will start to apply. Retail defaults to 0.")),
                 ("pk_logout_timer_min_level", new Property<long>(100, "The minimum character level for which the pk logout timer will apply.")),
-                ("turbine_chat_min_level", new Property<long>(1, "Minimum character level to use global chat channels (General, LFG, Roleplay, Trade, Olthoi, Society, Allegience)"))
+                ("turbine_chat_min_level", new Property<long>(1, "Minimum character level to use global chat channels (General, LFG, Roleplay, Trade, Olthoi, Society, Allegience)")),
+                ("arcane_lore_bypass_level", new Property<long>(391, "Minimum arcane lore buffed skill level at which the player can bypass all lore requirements on equip."))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<double>> DefaultDoubleProperties =
@@ -579,6 +580,9 @@ namespace ACE.Server.Managers
                 ("imbue_crippling_blow_magic_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for magic attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
                 ("imbue_crippling_blow_melee_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for melee attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
                 ("imbue_crippling_blow_missile_scalar", new Property<double>(4.0, "Scales the effectiveness of Crippling Blow for missile attacks at roughly max base skill. 1.0 = no effect. 2.0 = double damage on crit at max base skill. 4.0 = 4x damage etc.")),
+                ("imbue_critical_strike_magic_scalar", new Property<double>(1.0, "Scales the effectiveness of Critical Strike Imbue for magic attacks at roughly max base skill. 1.0 = default effect. 2.0 = Crit chance double of what the player normally would have with a CS weapon")),
+                ("imbue_critical_strike_melee_scalar", new Property<double>(1.0, "Scales the effectiveness of Critical Strike Imbue for melee attacks at roughly max base skill. 1.0 = default effect. 2.0 = Crit chance double of what the player normally would have with a CS weapon")),
+                ("imbue_critical_strike_missile_scalar", new Property<double>(1.0, "Scales the effectiveness of Critical Strike Imbue for missile attacks at roughly max base skill. 1.0 = default effect. 2.0 = Crit chance double of what the player normally would have with a CS weapon")),
                 ("luminance_modifier", new Property<double>(1.0, "Scales the amount of luminance received by players")),
                 ("mob_awareness_range", new Property<double>(1.0, "Scales the distance the monsters become alerted and aggro the players")),
                 ("pk_new_character_grace_period", new Property<double>(300, "the number of seconds, in addition to pk_respite_timer, that a player killer is set to non-player killer status after first exiting training academy")),
@@ -599,7 +603,8 @@ namespace ACE.Server.Managers
                 ("life_spell_damage_modifier", new Property<double>(1.0, "Scales life Projectile magics damage for PVP")),
                 ("war_streak_spell_damage_modifier", new Property<double>(1.0, "Scales war streak Projectile magics damage for PVP")),
                 ("lotto_hollow_scaler", new Property<double>(1.0, "scales hollow lotto procs")),
-                ("void_streak_spell_damage_modifier", new Property<double>(1.0, "Scales void streak Projectile magics damage for PVP"))
+                ("void_streak_spell_damage_modifier", new Property<double>(1.0, "Scales void streak Projectile magics damage for PVP")),
+                ("consumable_speed_modifier", new Property<double>(1.0, "Scales consumable animation speed. Allows players to eat or drink at a faster rate if set to a higher number."))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<string>> DefaultStringProperties =

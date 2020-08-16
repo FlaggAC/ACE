@@ -297,18 +297,6 @@ namespace ACE.Server.WorldObjects
                         killer.Session.Network.EnqueueSend(new GameMessageSystemChat($"{Name} has recently generated a pk trophy. They cannot generate another until after 1 hour has passed.", ChatMessageType.Broadcast));
                     }
                 }
-                if (Level >= 270 && !PKMode)
-                {
-                    HandleDeleveling();
-                }
-
-                if (PKMode)
-                {
-                    var varyxp = ThreadSafeRandom.Next(-0.05f, 0.05f); // add a random range of -5% to +5%
-
-                    // a player who dies while in pkmode loses 10% of their current level base. Then adds a random number between -5% and +5% to add a more natural xp flow.
-                    LoseLevelProportionalXp(0.10 + varyxp, 1, 10000000000);
-                }
 
                 if (killer != null && Level >= 75)
                 {
@@ -1169,6 +1157,8 @@ namespace ACE.Server.WorldObjects
 
         public void HandleDeleveling()
         {
+            return; //disabled
+
             // System wont come into effect until at least level 50.
             if (Level < 50)
                 return;
