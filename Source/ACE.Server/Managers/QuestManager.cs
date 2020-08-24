@@ -329,16 +329,16 @@ namespace ACE.Server.Managers
         /// <summary>
         /// Increment the number of times completed for a quest
         /// </summary>
-        public void Increment(string questName)
+        public void Increment(string questName, int amount = 1)
         {
-            // kill task / append # to quest name?
-            Update(questName);
+            for (var i = 0; i < amount; i++)
+                Update(questName);
         }
 
         /// <summary>
         /// Decrement the number of times completed for a quest
         /// </summary>
-        public void Decrement(string quest)
+        public void Decrement(string quest, int amount = 1)
         {
             var questName = GetQuestName(quest);
 
@@ -346,15 +346,15 @@ namespace ACE.Server.Managers
 
             if (existing != null)
             {
-                if (existing.NumTimesCompleted == 0)
-                {
-                    if (Debug) Console.WriteLine($"{Name}.QuestManager.Decrement({quest}): can not Decrement existing quest. {questName}.NumTimesCompleted is already 0.");
-                    return;
-                }
+                //if (existing.NumTimesCompleted == 0)
+                //{
+                //    if (Debug) Console.WriteLine($"{Name}.QuestManager.Decrement({quest}): can not Decrement existing quest. {questName}.NumTimesCompleted is already 0.");
+                //    return;
+                //}
 
                 // update existing quest
                 existing.LastTimeCompleted = (uint)Time.GetUnixTime();
-                existing.NumTimesCompleted--;
+                existing.NumTimesCompleted -= amount;
 
                 if (Debug) Console.WriteLine($"{Name}.QuestManager.Decrement({quest}): updated quest ({existing.NumTimesCompleted})");
 
@@ -600,6 +600,10 @@ namespace ACE.Server.Managers
         public void OnDeath(WorldObject killer)
         {
             var player = killer as Player;
+
+            if (killer is CombatPet combatPet)
+                player = combatPet.P_PetOwner;
+
             if (player == null) return;
 
             if (Creature.KillQuest != null)
@@ -608,6 +612,57 @@ namespace ACE.Server.Managers
                 player.QuestManager.HandleKillTask(Creature.KillQuest2, Creature);
             if (Creature.KillQuest3 != null)
                 player.QuestManager.HandleKillTask(Creature.KillQuest3, Creature);
+        }
+
+        public bool HasQuestBits(string questFormat, int bits)
+        {
+            var questName = GetQuestName(questFormat);
+
+            var quest = GetQuest(questName);
+            if (quest == null) return false;
+
+            var hasQuestBits = (quest.NumTimesCompleted & bits) == bits;
+
+            if (Debug)
+                Console.WriteLine($"{Name}.QuestManager.HasQuestBits({questFormat}, 0x{bits:X}): {hasQuestBits}");
+
+            return hasQuestBits;
+        }
+
+        public bool HasNoQuestBits(string questFormat, int bits)
+        {
+            var questName = GetQuestName(questFormat);
+
+            var quest = GetQuest(questName);
+            if (quest == null) return true;
+
+            var hasNoQuestBits = (quest.NumTimesCompleted & bits) == 0;
+
+            if (Debug)
+                Console.WriteLine($"{Name}.QuestManager.HasNoQuestBits({questFormat}, 0x{bits:X}): {hasNoQuestBits}");
+
+            return hasNoQuestBits;
+        }
+
+        public void SetQuestBits(string questFormat, int bits, bool on = true)
+        {
+            var questName = GetQuestName(questFormat);
+
+            var quest = GetQuest(questName);
+
+            var questBits = 0;
+
+            if (quest != null) questBits = quest.NumTimesCompleted;
+
+            if (on)
+                questBits |= bits;
+            else
+                questBits &= ~bits;
+
+            if (Debug)
+                Console.WriteLine($"{Name}.QuestManager.SetQuestBits({questFormat}, 0x{bits:X}): {on}");
+
+            SetQuestCompletions(questFormat, questBits);
         }
     }
 }

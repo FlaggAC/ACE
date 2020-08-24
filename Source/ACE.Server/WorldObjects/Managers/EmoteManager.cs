@@ -276,7 +276,7 @@ namespace ACE.Server.WorldObjects.Managers
                     var questTarget = GetQuestTarget((EmoteType)emote.Type, targetCreature, creature);
 
                     if (questTarget != null)
-                        questTarget.QuestManager.Decrement(emote.Message);
+                        questTarget.QuestManager.Decrement(emote.Message, emote.Amount ?? 1);
 
                     break;
 
@@ -299,6 +299,15 @@ namespace ACE.Server.WorldObjects.Managers
 
                     if (player != null)
                         player.Session.Network.EnqueueSend(new GameMessageSystemChat(text, ChatMessageType.Broadcast));
+
+                    break;
+
+                case EmoteType.Enlightenment:
+
+                    if (player != null)
+                    {
+                        Enlightenment.HandleEnlightenment(WorldObject, player);
+                    }
 
                     break;
 
@@ -373,7 +382,7 @@ namespace ACE.Server.WorldObjects.Managers
                     questTarget = GetQuestTarget((EmoteType)emote.Type, targetCreature, creature);
 
                     if (questTarget != null)
-                        questTarget.QuestManager.Increment(emote.Message);     // kill task?
+                        questTarget.QuestManager.Increment(emote.Message, emote.Amount ?? 1);
 
                     break;
 
@@ -530,11 +539,26 @@ namespace ACE.Server.WorldObjects.Managers
 
                 case EmoteType.InqPackSpace:
 
-                    //if (player != null)
-                    //{
-                    //    var freeSpace = player.ContainerCapacity > player.ItemCapacity;
-                    //    InqCategory(freeSpace ? EmoteCategory.TestSuccess : EmoteCategory.TestFailure, emote);
-                    //}
+                    if (player != null)
+                    {
+                        var numRequired = emote.Amount ?? 1;
+
+                        success = false;
+                        if (numRequired > 10000) // Since emote was not in 16py and we have just the two fields to go on, I will assume you could "mask" the value to pick between free Item Capacity space or free Container Capacity space
+                        {
+                            var freeSpace = player.GetFreeContainerSlots();
+
+                            success = freeSpace >= (numRequired - 10000);
+                        }
+                        else
+                        {
+                            var freeSpace = player.GetFreeInventorySlots(false); // assuming this was only for main pack. makes things easier at this point.
+
+                            success = freeSpace >= numRequired;
+                        }
+
+                        ExecuteEmoteSet(success ? EmoteCategory.TestSuccess : EmoteCategory.TestFailure, emote.Message, targetObject, true);
+                    }
                     break;
 
                 case EmoteType.InqMyQuest:
@@ -557,10 +581,30 @@ namespace ACE.Server.WorldObjects.Managers
 
                 case EmoteType.InqMyQuestBitsOff:
                 case EmoteType.InqQuestBitsOff:
+
+                    questTarget = GetQuestTarget((EmoteType)emote.Type, targetCreature, creature);
+
+                    if (questTarget != null)
+                    {
+                        var hasNoQuestBits = questTarget.QuestManager.HasNoQuestBits(emote.Message, emote.Amount ?? 0);
+
+                        ExecuteEmoteSet(hasNoQuestBits ? EmoteCategory.QuestSuccess : EmoteCategory.QuestFailure, emote.Message, targetObject, true);
+                    }
+
                     break;
 
                 case EmoteType.InqMyQuestBitsOn:
                 case EmoteType.InqQuestBitsOn:
+
+                    questTarget = GetQuestTarget((EmoteType)emote.Type, targetCreature, creature);
+
+                    if (questTarget != null)
+                    {
+                        var hasQuestBits = questTarget.QuestManager.HasQuestBits(emote.Message, emote.Amount ?? 0);
+
+                        ExecuteEmoteSet(hasQuestBits ? EmoteCategory.QuestSuccess : EmoteCategory.QuestFailure, emote.Message, targetObject, true);
+                    }
+
                     break;
 
                 case EmoteType.InqMyQuestSolves:
@@ -756,17 +800,17 @@ namespace ACE.Server.WorldObjects.Managers
 
                 case EmoteType.LocalSignal:
 
-                    if (creature != null)
+                    if (WorldObject != null)
                     {
-                        if (creature.CurrentLandblock != null)
-                            creature.CurrentLandblock.EmitSignal(creature, emote.Message);
+                        if (WorldObject.CurrentLandblock != null)
+                            WorldObject.CurrentLandblock.EmitSignal(WorldObject, emote.Message);
                     }
                     break;
 
                 case EmoteType.LockFellow:
 
                     if (player != null && player.Fellowship != null)
-                        player.HandleActionFellowshipChangeLock(true);
+                        player.HandleActionFellowshipChangeLock(true, emoteSet.Quest);
 
                     break;
 
@@ -1083,10 +1127,22 @@ namespace ACE.Server.WorldObjects.Managers
 
                 case EmoteType.SetMyQuestBitsOff:
                 case EmoteType.SetQuestBitsOff:
+
+                    questTarget = GetQuestTarget((EmoteType)emote.Type, targetCreature, creature);
+
+                    if (questTarget != null && emote.Message != null && emote.Amount != null)
+                        questTarget.QuestManager.SetQuestBits(emote.Message, (int)emote.Amount, false);
+
                     break;
 
                 case EmoteType.SetMyQuestBitsOn:
                 case EmoteType.SetQuestBitsOn:
+
+                    questTarget = GetQuestTarget((EmoteType)emote.Type, targetCreature, creature);
+
+                    if (questTarget != null && emote.Message != null && emote.Amount != null)
+                        questTarget.QuestManager.SetQuestBits(emote.Message, (int)emote.Amount);
+
                     break;
 
                 case EmoteType.SetMyQuestCompletions:
@@ -1362,6 +1418,8 @@ namespace ACE.Server.WorldObjects.Managers
         /// </summary>
         public PropertiesEmote GetEmoteSet(EmoteCategory category, string questName = null, VendorType? vendorType = null, uint? wcid = null, bool useRNG = true)
         {
+            //if (Debug) Console.WriteLine($"{WorldObject.Name}.EmoteManager.GetEmoteSet({category}, {questName}, {vendorType}, {wcid}, {useRNG})");
+
             if (_worldObject.Biota.PropertiesEmote == null)
                 return null;
 
@@ -1369,8 +1427,10 @@ namespace ACE.Server.WorldObjects.Managers
             var emoteSet = _worldObject.Biota.PropertiesEmote.Where(e => e.Category == category);
 
             // optional criteria
-            if (questName != null)
-                emoteSet = emoteSet.Where(e => e.Quest.Equals(questName, StringComparison.OrdinalIgnoreCase));
+            if (category == EmoteCategory.HearChat && questName != null)
+                emoteSet = emoteSet.Where(e => e.Quest != null && e.Quest.Equals(questName, StringComparison.OrdinalIgnoreCase) || e.Quest == null);
+            else if (questName != null)
+                emoteSet = emoteSet.Where(e => e.Quest != null && e.Quest.Equals(questName, StringComparison.OrdinalIgnoreCase));
             if (vendorType != null)
                 emoteSet = emoteSet.Where(e => e.VendorType != null && e.VendorType.Value == vendorType);
             if (wcid != null)
@@ -1405,6 +1465,8 @@ namespace ACE.Server.WorldObjects.Managers
         /// </summary>
         public void ExecuteEmoteSet(EmoteCategory category, string quest = null, WorldObject targetObject = null, bool nested = false)
         {
+            //if (Debug) Console.WriteLine($"{WorldObject.Name}.EmoteManager.ExecuteEmoteSet({category}, {quest}, {targetObject}, {nested})");
+
             var emoteSet = GetEmoteSet(category, quest);
 
             // TODO: revisit if nested chains need to propagate timers
@@ -1419,6 +1481,8 @@ namespace ACE.Server.WorldObjects.Managers
         /// <param name="actionChain">For adding delays between emotes</param>
         public bool ExecuteEmoteSet(PropertiesEmote emoteSet, WorldObject targetObject = null, bool nested = false)
         {
+            //if (Debug) Console.WriteLine($"{WorldObject.Name}.EmoteManager.ExecuteEmoteSet({emoteSet}, {targetObject}, {nested})");
+
             // detect busy state
             // TODO: maybe eventually we should consider having categories that can be queued?
             // there are some categories that shouldn't be queued, like heartbeats...
@@ -1433,6 +1497,8 @@ namespace ACE.Server.WorldObjects.Managers
 
         public void Enqueue(PropertiesEmote emoteSet, WorldObject targetObject, int emoteIdx = 0, float delay = 0.0f)
         {
+            //if (Debug) Console.WriteLine($"{WorldObject.Name}.EmoteManager.Enqueue({emoteSet}, {targetObject}, {emoteIdx}, {delay})");
+
             if (emoteSet == null)
             {
                 Nested--;
@@ -1591,6 +1657,8 @@ namespace ACE.Server.WorldObjects.Managers
 
                 result = result.Replace("%tf", $"{(targetPlayer.Fellowship != null ? targetPlayer.Fellowship.FellowshipName : "")}");
 
+                result = result.Replace("%fqt", !string.IsNullOrWhiteSpace(quest) && targetPlayer.Fellowship != null ? targetPlayer.Fellowship.QuestManager.GetNextSolveTime(questName).GetFriendlyString() : "");
+
                 result = result.Replace("%tqm", !string.IsNullOrWhiteSpace(quest) ? targetPlayer.QuestManager.GetMaxSolves(questName).ToString() : "");
 
                 result = result.Replace("%tqc", !string.IsNullOrWhiteSpace(quest) ? targetPlayer.QuestManager.GetCurrentSolves(questName).ToString() : "");
@@ -1600,7 +1668,7 @@ namespace ACE.Server.WorldObjects.Managers
             {
                 result = result.Replace("%mqt", !string.IsNullOrWhiteSpace(quest) ? sourceCreature.QuestManager.GetNextSolveTime(questName).GetFriendlyString() : "");
 
-                result = result.Replace("%mlqt", !string.IsNullOrWhiteSpace(quest) ? sourceCreature.QuestManager.GetNextSolveTime(questName).GetFriendlyLongString() : "");
+                result = result.Replace("%mxqt", !string.IsNullOrWhiteSpace(quest) ? sourceCreature.QuestManager.GetNextSolveTime(questName).GetFriendlyLongString() : "");
 
                 //result = result.Replace("%CDtime", !string.IsNullOrWhiteSpace(quest) ? sourceCreature.QuestManager.GetNextSolveTime(questName).GetFriendlyString() : "");
             }
@@ -1670,6 +1738,8 @@ namespace ACE.Server.WorldObjects.Managers
 
         public void OnPortal(Creature activator)
         {
+            IsBusy = false;
+
             ExecuteEmoteSet(EmoteCategory.Portal, null, activator);
         }
 
@@ -1720,6 +1790,14 @@ namespace ACE.Server.WorldObjects.Managers
             ExecuteEmoteSet(EmoteCategory.NewEnemy, null, newEnemy);
         }
 
+        /// <summary>
+        /// Called when a monster completes an attack
+        /// </summary>
+        public void OnAttack(WorldObject target)
+        {
+            ExecuteEmoteSet(EmoteCategory.Taunt, null, target);
+        }
+
         public void OnDamage(Creature attacker)
         {
             ExecuteEmoteSet(EmoteCategory.WoundedTaunt, null, attacker);
@@ -1746,6 +1824,32 @@ namespace ACE.Server.WorldObjects.Managers
         }
 
         /// <summary>
+        /// Called when player interacts with item that has a Quest string
+        /// </summary>
+        public void OnQuest(Creature initiator)
+        {
+            var questName = WorldObject.Quest;
+
+            var hasQuest = initiator.QuestManager.HasQuest(questName);
+
+            if (!hasQuest)
+            {
+                // add new quest
+                initiator.QuestManager.Update(questName);
+                hasQuest = initiator.QuestManager.HasQuest(questName);
+                ExecuteEmoteSet(hasQuest ? EmoteCategory.QuestSuccess : EmoteCategory.QuestFailure, questName, initiator);
+            }
+            else
+            {
+                // update existing quest
+                var canSolve = initiator.QuestManager.CanSolve(questName);
+                if (canSolve)
+                    initiator.QuestManager.Stamp(questName);
+                ExecuteEmoteSet(canSolve ? EmoteCategory.QuestSuccess : EmoteCategory.QuestFailure, questName, initiator);
+            }
+        }
+
+        /// <summary>
         /// Called when this NPC receives a direct text message from a player
         /// </summary>
         public void OnTalkDirect(Player player, string message)
@@ -1756,7 +1860,7 @@ namespace ACE.Server.WorldObjects.Managers
         /// <summary>
         /// Called when this NPC receives a local signal from a player
         /// </summary>
-        public void OnLocalSignal(Creature emitter, string message)
+        public void OnLocalSignal(WorldObject emitter, string message)
         {
             ExecuteEmoteSet(EmoteCategory.ReceiveLocalSignal, message, emitter);
         }
@@ -1767,6 +1871,14 @@ namespace ACE.Server.WorldObjects.Managers
         public void OnHomeSick(WorldObject attackTarget)
         {
             ExecuteEmoteSet(EmoteCategory.Homesick, null, attackTarget);
+        }
+
+        /// <summary>
+        /// Called when this NPC hears local chat from a player
+        /// </summary>
+        public void OnHearChat(Player player, string message)
+        {
+            ExecuteEmoteSet(EmoteCategory.HearChat, message, player);
         }
 
         //public bool HasAntennas => WorldObject.Biota.BiotaPropertiesEmote.Count(x => x.Category == (int)EmoteCategory.ReceiveLocalSignal) > 0;

@@ -118,7 +118,7 @@ namespace ACE.Server.WorldObjects
                     }
 
                     // ensure player won't exceed limit of 70 specialized credits after operation
-                    if (GetTotalSpecializedCredits(player) + skillBase.UpgradeCostFromTrainedToSpecialized > 70)
+                    if (GetTotalSpecializedCredits(player) + skillBase.SpecializedCost > 70)
                     {
                         player.Session.Network.EnqueueSend(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.TooManyCreditsInSpecializedSkills, skill.Skill.ToSentence()));
                         return false;
@@ -136,33 +136,8 @@ namespace ACE.Server.WorldObjects
                     }
 
                     // salvage / tinkering skills specialized via augmentations
-                    // cannot be untrained or unspecialized
-                    bool specAug = false;
-
-                    switch (skill.Skill)
-                    {
-                        case Skill.ArmorTinkering:
-                            specAug = player.AugmentationSpecializeArmorTinkering > 0;
-                            break;
-
-                        case Skill.ItemTinkering:
-                            specAug = player.AugmentationSpecializeItemTinkering > 0;
-                            break;
-
-                        case Skill.MagicItemTinkering:
-                            specAug = player.AugmentationSpecializeMagicItemTinkering > 0;
-                            break;
-
-                        case Skill.WeaponTinkering:
-                            specAug = player.AugmentationSpecializeWeaponTinkering > 0;
-                            break;
-
-                        case Skill.Salvaging:
-                            specAug = player.AugmentationSpecializeSalvaging > 0;
-                            break;
-                    }
-
-                    if (specAug)
+                    // Salvaging cannot be untrained or unspecialized, specialized tinkering skills can be reset at Asheron's Castle only.
+                    if (player.IsSkillSpecializedViaAugmentation(skill.Skill, out var playerHasAugmentation) && playerHasAugmentation)
                     {
                         player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot lower your {skill.Skill.ToSentence()} augmented skill.", ChatMessageType.Broadcast));
                         return false;
@@ -291,7 +266,7 @@ namespace ACE.Server.WorldObjects
 
                     var skill = DatManager.PortalDat.SkillTable.SkillBaseHash[(uint)kvp.Key];
 
-                    specializedCreditsTotal += skill.UpgradeCostFromTrainedToSpecialized;
+                    specializedCreditsTotal += skill.SpecializedCost;
                 }
             }
 
