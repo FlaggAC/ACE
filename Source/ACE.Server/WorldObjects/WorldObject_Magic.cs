@@ -72,7 +72,7 @@ namespace ACE.Server.WorldObjects
             switch (spell.School)
             {
                 case MagicSchool.WarMagic:
-                    WarMagic(target, spell, this);
+                    WarMagic(target, spell, caster ?? this);
                     break;
 
                 case MagicSchool.LifeMagic:
@@ -93,7 +93,7 @@ namespace ACE.Server.WorldObjects
                     break;
 
                 case MagicSchool.VoidMagic:
-                    VoidMagic(target, spell, this);
+                    VoidMagic(target, spell, caster ?? this);
                     break;
             }
 
@@ -274,6 +274,9 @@ namespace ACE.Server.WorldObjects
             if (spell.NumProjectiles > 0 && !projectileHit)
                 return false;
 
+            if (caster != null && Cloak.IsCloak(caster))
+                return false;
+
             uint magicSkill = 0;
 
             if (caster == null)
@@ -376,7 +379,7 @@ namespace ACE.Server.WorldObjects
 
             var spellTarget = !spell.IsSelfTargeted ? target as Creature : creature;
 
-            if (this is Gem || this is Hook)
+            if (this is Gem || this is Food || this is Hook)
                 spellTarget = target as Creature;
 
             var targetPlayer = spellTarget as Player;
@@ -406,6 +409,24 @@ namespace ACE.Server.WorldObjects
 
                     int boost = tryBoost;
                     damage = tryBoost < 0 ? (uint)Math.Abs(tryBoost) : 0;
+
+                    // handle cloak damage proc for harm other
+                    var equippedCloak = spellTarget?.EquippedCloak;
+
+                    if (spellTarget != this && spell.VitalDamageType == DamageType.Health && tryBoost < 0)
+                    {
+                        var percent = (float)-tryBoost / spellTarget.Health.MaxValue;
+
+                        if (equippedCloak != null && Cloak.HasDamageProc(equippedCloak) && Cloak.RollProc(equippedCloak, percent))
+                        {
+                            var reduced = -Cloak.GetReducedAmount(-tryBoost);
+
+                            Cloak.ShowMessage(spellTarget, this, -tryBoost, -reduced);
+
+                            tryBoost = boost = reduced;
+                            damage = (uint)Math.Abs(tryBoost);
+                        }
+                    }
 
                     switch (spell.VitalDamageType)
                     {
@@ -439,12 +460,14 @@ namespace ACE.Server.WorldObjects
                             string msg;
                             if (spell.IsBeneficial)
                             {
-                                msg = $"You cast {spell.Name} and restore {boost} points of {srcVital} to {spellTarget.Name}.";
+                                //msg = $"You cast {spell.Name} and restore {boost} points of {srcVital} to {spellTarget.Name}.";
+                                msg = $"With {spell.Name} you restore {boost} points of {srcVital} to {spellTarget.Name}.";
                                 enchantmentStatus.Message = new GameMessageSystemChat(msg, ChatMessageType.Magic);
                             }
                             else
                             {
-                                msg = $"You cast {spell.Name} and drain {Math.Abs(boost)} points of {srcVital} from {spellTarget.Name}.";
+                                //msg = $"You cast {spell.Name} and drain {Math.Abs(boost)} points of {srcVital} from {spellTarget.Name}.";
+                                msg = $"With {spell.Name} you drain {Math.Abs(boost)} points of {srcVital} from {spellTarget.Name}.";
                                 enchantmentStatus.Message = new GameMessageSystemChat(msg, ChatMessageType.Magic);
                             }
                         }
@@ -470,29 +493,26 @@ namespace ACE.Server.WorldObjects
                         }
                     }
 
-                    // handle cloaks
-                    if (spellTarget != this && spellTarget.IsAlive && srcVital != null && srcVital.Equals("health") && boost < 0 && spellTarget.HasCloakEquipped)
+                    if (spellTarget != this && spellTarget.IsAlive && spell.VitalDamageType == DamageType.Health && boost < 0)
                     {
-
-                        if (spellTarget.HasCloakEquipped)
+                        // handle cloak spell proc
+                        if (equippedCloak != null && Cloak.HasProcSpell(equippedCloak))
                         {
+                            var pct = (float)-boost / spellTarget.Health.MaxValue;
+
                             // ensure message is sent after enchantment.Message
                             var actionChain = new ActionChain();
                             actionChain.AddDelayForOneTick();
-                            actionChain.AddAction(this, () =>
-                            {
-                                var pct = (float)-boost / spellTarget.Health.MaxValue;
-                                Cloak.TryProcSpell(spellTarget, this, pct);
-                            });
+                            actionChain.AddAction(this, () => Cloak.TryProcSpell(spellTarget, this, equippedCloak, pct));
                             actionChain.EnqueueChain();
                         }
 
                         // ensure emote process occurs after damage msg
                         var emoteChain = new ActionChain();
                         emoteChain.AddDelayForOneTick();
-                        emoteChain.AddAction(target, () => target.EmoteManager.OnDamage(player));
+                        emoteChain.AddAction(target, () => target.EmoteManager.OnDamage(creature));
                         //if (critical)
-                        //    emoteChain.AddAction(target, () => target.EmoteManager.OnReceiveCritical(player));
+                        //    emoteChain.AddAction(target, () => target.EmoteManager.OnReceiveCritical(creature));
                         emoteChain.EnqueueChain();
                     }
                     break;
@@ -537,6 +557,24 @@ namespace ACE.Server.WorldObjects
 
                         srcVitalChange = (uint)Math.Round(srcVitalChange * scalar);
                         destVitalChange = maxDestVitalChange;
+                    }
+
+                    // handle cloak damage procs for drain health other
+                    equippedCloak = spellTarget?.EquippedCloak;
+
+                    if (isDrain && spell.Source == PropertyAttribute2nd.Health)
+                    {
+                        var percent = (float)srcVitalChange / spellTarget.Health.MaxValue;
+
+                        if (equippedCloak != null && Cloak.HasDamageProc(equippedCloak) && Cloak.RollProc(equippedCloak, percent))
+                        {
+                            var reduced = Cloak.GetReducedAmount(srcVitalChange);
+
+                            Cloak.ShowMessage(spellTarget, this, srcVitalChange, reduced);
+
+                            srcVitalChange = reduced;
+                            destVitalChange = (uint)Math.Round(srcVitalChange * (1.0f - spell.LossPercent) * boostMod);
+                        }
                     }
 
                     // Apply the change in vitals to the source
@@ -625,30 +663,34 @@ namespace ACE.Server.WorldObjects
                         }
                     }
 
-                    // handle cloaks
-                    if (spellTarget != this && spellTarget.IsAlive && srcVital != null && srcVital.Equals("health"))
+                    if (isDrain && spellTarget.IsAlive && spell.Source == PropertyAttribute2nd.Health)
                     {
-                        if (spellTarget.HasCloakEquipped)
+                        // handle cloak spell proc
+                        if (equippedCloak != null && Cloak.HasProcSpell(equippedCloak))
                         {
+                            var pct = (float)srcVitalChange / spellTarget.Health.MaxValue;
+
                             // ensure message is sent after enchantment.Message
                             var actionChain = new ActionChain();
                             actionChain.AddDelayForOneTick();
-                            actionChain.AddAction(this, () =>
-                            {
-                                var pct = (float)srcVitalChange / spellTarget.Health.MaxValue;
-                                Cloak.TryProcSpell(spellTarget, this, pct);
-                            });
+                            actionChain.AddAction(this, () => Cloak.TryProcSpell(spellTarget, this, equippedCloak, pct));
                             actionChain.EnqueueChain();
                         }
 
                         // ensure emote process occurs after damage msg
                         var emoteChain = new ActionChain();
                         emoteChain.AddDelayForOneTick();
-                        emoteChain.AddAction(target, () => target.EmoteManager.OnDamage(player));
+                        emoteChain.AddAction(target, () => target.EmoteManager.OnDamage(creature));
                         //if (critical)
-                        //    emoteChain.AddAction(target, () => target.EmoteManager.OnReceiveCritical(player));
+                        //    emoteChain.AddAction(target, () => target.EmoteManager.OnReceiveCritical(creature));
                         emoteChain.EnqueueChain();
                     }
+                    break;
+
+                case SpellType.Projectile:
+
+                    damage = 0;
+                    var projectiles = CreateSpellProjectiles(spell, target, itemCaster);
                     break;
 
                 case SpellType.LifeProjectile:
@@ -725,9 +767,9 @@ namespace ACE.Server.WorldObjects
 
                     damage = 0;
                     if (itemCaster != null)
-                        enchantmentStatus = CreateEnchantment(target, itemCaster, spell, equip);
+                        enchantmentStatus = CreateEnchantment(spellTarget ?? target, itemCaster, spell, equip);
                     else
-                        enchantmentStatus = CreateEnchantment(target, this, spell, equip);
+                        enchantmentStatus = CreateEnchantment(spellTarget ?? target, this, spell, equip);
                     break;
 
                 default:
@@ -822,7 +864,7 @@ namespace ACE.Server.WorldObjects
                 LifeMagic(spell, out uint damage, out bool critical, out var enchantmentStatus, target);
                 return enchantmentStatus;
             }
-            return CreateEnchantment(target, itemCaster ?? this, spell, equip);
+            return CreateEnchantment(target ?? itemCaster ?? this, itemCaster ?? this, spell, equip);
         }
 
         /// <summary>
@@ -1440,6 +1482,9 @@ namespace ACE.Server.WorldObjects
 
             var speed = GetProjectileSpeed(spell);
 
+            if (target == null && this is Creature creature && !(this is Player))
+                target = creature.AttackTarget;
+
             if (target == null)
             {
                 // launch along forward vector
@@ -1687,7 +1732,7 @@ namespace ACE.Server.WorldObjects
 
             EnqueueBroadcast(new GameMessageScript(target.Guid, (PlayScript)spell.TargetEffect, spell.Formula.Scale));
             var enchantmentStatus = CreatureMagic(target, spell);
-            if (enchantmentStatus.Message != null)
+            if (player != null && enchantmentStatus.Message != null)
                 player.Session.Network.EnqueueSend(enchantmentStatus.Message);
 
             var difficulty = spell.Power;
@@ -1695,7 +1740,8 @@ namespace ACE.Server.WorldObjects
 
             if (spell.IsHarmful)
             {
-                Proficiency.OnSuccessUse(player, player.GetCreatureSkill(Skill.CreatureEnchantment), (target as Creature).GetCreatureSkill(Skill.MagicDefense).Current);
+                if (player != null)
+                    Proficiency.OnSuccessUse(player, player.GetCreatureSkill(Skill.CreatureEnchantment), (target as Creature).GetCreatureSkill(Skill.MagicDefense).Current);
 
                 // handle target procs
                 var sourceCreature = this as Creature;
@@ -1705,7 +1751,7 @@ namespace ACE.Server.WorldObjects
                 if (player != null && targetPlayer != null)
                     Player.UpdatePKTimers(player, targetPlayer);
             }
-            else
+            else if (player != null)
                 Proficiency.OnSuccessUse(player, player.GetCreatureSkill(Skill.CreatureEnchantment), difficultyMod);
 
             return true;
@@ -1763,12 +1809,12 @@ namespace ACE.Server.WorldObjects
             }
             else if (caster == this || target == this || caster != target)
             {
-                var prefix = caster == this ? "You cast" : $"{caster.Name} casts";
+                var casterName = caster == this ? "You" : caster.Name;
                 var targetName = target.Name;
                 if (target == this)
                     targetName = caster == this ? "yourself" : "you";
 
-                message = $"{prefix} {spell.Name} on {targetName}{suffix}";
+                message = $"{casterName} cast {spell.Name} on {targetName}{suffix}";
             }
 
             if (message != null)

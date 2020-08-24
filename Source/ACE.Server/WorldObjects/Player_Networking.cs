@@ -125,6 +125,8 @@ namespace ACE.Server.WorldObjects
                     JoinTurbineChatChannel("LFG");
                 if (GetCharacterOption(CharacterOption.ListenToRoleplayChat))
                     JoinTurbineChatChannel("Roleplay");
+                if (GetCharacterOption(CharacterOption.ListenToSocietyChat) && Society != FactionBits.None)
+                    JoinTurbineChatChannel("Society");
             }
 
             // check if vassals earned XP while offline
@@ -141,6 +143,10 @@ namespace ACE.Server.WorldObjects
 
             //HandleMissingXp();
             HandleSkillCreditRefund();
+            HandleSkillTemplesReset();
+            HandleSkillSpecCreditRefund();
+            HandleFreeSkillResetRenewal();
+            HandleFreeAttributeResetRenewal();
 
             if (PlayerKillerStatus == PlayerKillerStatus.PKLite && !PropertyManager.GetBool("pkl_server").Item)
             {
@@ -162,17 +168,34 @@ namespace ACE.Server.WorldObjects
         {
             var allegianceChannel = Allegiance != null && !breakAllegiance ? Allegiance.Biota.Id : 0u;
 
-            //todo: society chat channel
+            var societyChannel = Society switch
+            {
+                FactionBits.CelestialHand => TurbineChatChannel.SocietyCelestialHand,
+                FactionBits.EldrytchWeb => TurbineChatChannel.SocietyEldrytchWeb,
+                FactionBits.RadiantBlood => TurbineChatChannel.SocietyRadiantBlood,
+                _ => 0u
+            };
 
-            Session.Network.EnqueueSend(new GameEventSetTurbineChatChannels(Session, allegianceChannel));
+            Session.Network.EnqueueSend(new GameEventSetTurbineChatChannels(Session, allegianceChannel, societyChannel));
         }
 
         public void JoinTurbineChatChannel(string channelName)
         {
             if (channelName == "Allegiance" && Allegiance == null)
                 return;
-            else if (channelName == "Society") //&& Society == null) // todo: society
-                return;
+            else if (channelName == "Society")
+            {
+                if (Society == FactionBits.None)
+                    return;
+
+                channelName = Society switch
+                {
+                    FactionBits.CelestialHand => "Celestial Hand",
+                    FactionBits.EldrytchWeb => "Eldrytch Web",
+                    FactionBits.RadiantBlood => "Radiant Blood",
+                    _ => channelName
+                };
+            }
             else if (channelName == "Olthoi") //todo: olthoi play
                 return;
 
@@ -185,8 +208,19 @@ namespace ACE.Server.WorldObjects
         {
             if (channelName == "Allegiance" && !breakAllegiance && Allegiance == null)
                 return;
-            else if (channelName == "Society") //&& Society == null) // todo: society
-                return;
+            else if (channelName == "Society")
+            {
+                if (Society == FactionBits.None)
+                    return;
+
+                channelName = Society switch
+                {
+                    FactionBits.CelestialHand => "Celestial Hand",
+                    FactionBits.EldrytchWeb => "Eldrytch Web",
+                    FactionBits.RadiantBlood => "Radiant Blood",
+                    _ => channelName
+                };
+            }
             else if (channelName == "Olthoi") //todo: olthoi play
                 return;
 
@@ -411,6 +445,23 @@ namespace ACE.Server.WorldObjects
         public void SendTransientError(string msg)
         {
             Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, msg));
+        }
+
+        public void HandleActionSetAFKMode(bool afkStatus)
+        {
+            IsAfk = afkStatus;
+
+            Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyBool(this, PropertyBool.Afk, IsAfk));
+        }
+
+        public static string DefaultAFKMessage => "I am currently away from the keyboard."; // client default (/afk msg)
+
+        public void HandleActionSetAFKMessage(string afkMessage)
+        {
+            if (string.IsNullOrWhiteSpace(afkMessage))
+                afkMessage = DefaultAFKMessage; // client default
+
+            AfkMessage = afkMessage;
         }
     }
 }

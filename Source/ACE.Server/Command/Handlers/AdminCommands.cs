@@ -7,6 +7,7 @@ using System.Threading;
 
 using log4net;
 
+using ACE.Common;
 using ACE.Common.Extensions;
 using ACE.Database;
 using ACE.Database.Models.Auth;
@@ -559,6 +560,7 @@ namespace ACE.Server.Command.Handlers
                 {
                     wo.ResetGenerator();
                     wo.GeneratorEnteredWorld = false;
+                    wo.GeneratorRegeneration(Time.GetUnixTime());
                 }
             }
         }
@@ -768,9 +770,11 @@ namespace ACE.Server.Command.Handlers
                         return;
 
                     if (wo != null)
+                    {
                         wo.Smite(session.Player, PropertyManager.GetBool("smite_uses_takedamage").Item);
 
-                    PlayerManager.BroadcastToAuditChannel(session.Player, $"{session.Player.Name} used smite on {wo.Name} (0x{wo.Guid:X8})");
+                        PlayerManager.BroadcastToAuditChannel(session.Player, $"{session.Player.Name} used smite on {wo.Name} (0x{wo.Guid:X8})");
+                    }
                 }
                 else
                 {
@@ -1210,8 +1214,8 @@ namespace ACE.Server.Command.Handlers
 
             var obj = WorldObjectFactory.CreateNewWorldObject(weenie);
 
-            if (!obj.TimeToRot.HasValue)
-                obj.TimeToRot = Double.MaxValue;
+            //if (!obj.TimeToRot.HasValue)
+            //    obj.TimeToRot = Double.MaxValue;
 
             if (obj.WeenieType == WeenieType.Creature)
                 obj.Location = session.Player.Location.InFrontOf(5f, true);
@@ -2460,7 +2464,6 @@ namespace ACE.Server.Command.Handlers
             var offlinePlayer = PlayerManager.GetOfflinePlayer(oldName);
             if (onlinePlayer != null)
             {
-                var success = false;
                 DatabaseManager.Shard.IsCharacterNameAvailable(newName, isAvailable =>
                 {
                     if (!isAvailable)
@@ -2474,19 +2477,13 @@ namespace ACE.Server.Command.Handlers
                     onlinePlayer.Name = newName;
                     onlinePlayer.SavePlayerToDatabase();
 
-                    success = true;
-                });
-
-                if (success)
-                {
                     CommandHandlerHelper.WriteOutputInfo(session, $"Player named \"{oldName}\" renamed to \"{newName}\" succesfully!", ChatMessageType.Broadcast);
 
                     onlinePlayer.Session.LogOffPlayer();
-                }
+                });
             }
             else if (offlinePlayer != null)
             {
-                var success = false;
                 DatabaseManager.Shard.IsCharacterNameAvailable(newName, isAvailable =>
                 {
                     if (!isAvailable)
@@ -2497,16 +2494,23 @@ namespace ACE.Server.Command.Handlers
 
                     var character = DatabaseManager.Shard.BaseDatabase.GetCharacterStubByName(oldName);
 
-                    character.Name = newName;
-                    DatabaseManager.Shard.SaveCharacter(character, new ReaderWriterLockSlim(), null);
+                    DatabaseManager.Shard.GetCharacters(character.AccountId, false, result =>
+                    {
+                        var foundCharacterMatch = result.Where(c => c.Id == character.Id).FirstOrDefault();
+
+                        if (foundCharacterMatch == null)
+                        {
+                            CommandHandlerHelper.WriteOutputInfo(session, $"Error, a player named \"{oldName}\" cannot be found.", ChatMessageType.Broadcast);
+                        }
+
+                        DatabaseManager.Shard.RenameCharacter(foundCharacterMatch, newName, new ReaderWriterLockSlim(), null);
+                    });
+
                     offlinePlayer.SetProperty(PropertyString.Name, newName);
                     offlinePlayer.SaveBiotaToDatabase();
 
-                    success = true;
-                });
-
-                if (success)
                     CommandHandlerHelper.WriteOutputInfo(session, $"Player named \"{oldName}\" renamed to \"{newName}\" succesfully!", ChatMessageType.Broadcast);
+                });
             }
             else
             {

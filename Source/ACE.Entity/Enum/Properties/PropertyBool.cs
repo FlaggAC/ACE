@@ -144,6 +144,7 @@ namespace ACE.Entity.Enum.Properties
         RecallsDisabled                  = 107,
         RareUsesTimer                    = 108,
         ActdPreorderReceivedItems        = 109,
+        [Ephemeral]
         Afk                              = 110,
         IsGagged                         = 111,
         ProcSpellSelfTargeted            = 112,
@@ -178,9 +179,17 @@ namespace ACE.Entity.Enum.Properties
         [Ephemeral][ServerOnly]
         IsEnvoy                          = 9005,
         [ServerOnly]
+        UnspecializedSkills              = 9006,
+        [ServerOnly]
         Trophy                           = 9105,
         [ServerOnly]
+        FreeSkillResetRenewed            = 9007,
+        [ServerOnly]
         NetherFix                        = 9106,
+        [ServerOnly]
+        FreeAttributeResetRenewed        = 9008,
+        [ServerOnly]
+        SkillTemplesTimerReset           = 9009,
         [ServerOnly]
         EliteTrigger                     = 9107,
         [ServerOnly]

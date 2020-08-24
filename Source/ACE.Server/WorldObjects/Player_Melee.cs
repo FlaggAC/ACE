@@ -283,6 +283,8 @@ namespace ACE.Server.WorldObjects
             var prevTime = 0.0f;
             bool targetProc = false;
 
+            List<Creature> cleave = null;
+
             for (var i = 0; i < numStrikes; i++)
             {
                 // are there animation hooks for damage frames?
@@ -290,6 +292,8 @@ namespace ACE.Server.WorldObjects
                 //actionChain.AddDelaySeconds(swingTime);
                 actionChain.AddDelaySeconds(attackFrames[i] * animLength - prevTime);
                 prevTime = attackFrames[i] * animLength;
+
+                var swingNum = i;
 
                 actionChain.AddAction(this, () =>
                 {
@@ -300,27 +304,29 @@ namespace ACE.Server.WorldObjects
                         return;
                     }
 
-
                     if (creature.Warded && creature.TogglePhys)
                     {
                         Session.Network.EnqueueSend(new GameMessageSystemChat($"{creature.Name} resists your attack completely", ChatMessageType.CombatEnemy));
                         return;
                     }
-                    else
+
+                    var damageEvent = DamageTarget(creature, weapon);
+
+                    // handle target procs
+                    if (damageEvent != null && damageEvent.HasDamage && !targetProc)
                     {
-                        var damageEvent = DamageTarget(creature, weapon);
+                        TryProcEquippedItems(creature, false);
+                        targetProc = true;
+                    }
 
-                        // handle target procs
-                        if (damageEvent != null && damageEvent.HasDamage && !targetProc)
-                        {
-                            TryProcEquippedItems(creature, false);
-                            targetProc = true;
-                        }
+                    if (swingNum == 0 && weapon != null && weapon.IsCleaving)
+                        cleave = GetCleaveTarget(creature, weapon);
 
-                        if (weapon != null && weapon.IsCleaving)
+                    if (cleave != null)
+                    {
+                        foreach (var cleaveHit in cleave)
                         {
-                            var cleave = GetCleaveTarget(creature, weapon);
-                            foreach (var cleaveHit in cleave)
+                            if (swingNum == 0 || IsCleaveable(cleaveHit))
                                 DamageTarget(cleaveHit, weapon);
 
                             // target procs don't happen for cleaving

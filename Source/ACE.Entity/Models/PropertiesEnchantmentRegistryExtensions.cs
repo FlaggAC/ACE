@@ -187,10 +187,16 @@ namespace ACE.Entity.Models
             }
         }
 
+        // todo: this is starting to get a bit messy here, EnchantmentTypeFlags handling should be more adaptable
+        // perhaps the enchantment registry in acclient should be investigated for reference logic
+        private static readonly EnchantmentTypeFlags MultiAttribute = EnchantmentTypeFlags.MultipleStat | EnchantmentTypeFlags.Attribute;
+
+        private static readonly EnchantmentTypeFlags MultiSkill = EnchantmentTypeFlags.MultipleStat | EnchantmentTypeFlags.Skill;
+
         /// <summary>
         /// Returns the top layers in each spell category for a StatMod type + key
         /// </summary>
-        public static List<PropertiesEnchantmentRegistry> GetEnchantmentsTopLayerByStatModType(this ICollection<PropertiesEnchantmentRegistry> value, EnchantmentTypeFlags statModType, uint statModKey, ReaderWriterLockSlim rwLock)
+        public static List<PropertiesEnchantmentRegistry> GetEnchantmentsTopLayerByStatModType(this ICollection<PropertiesEnchantmentRegistry> value, EnchantmentTypeFlags statModType, uint statModKey, ReaderWriterLockSlim rwLock, bool handleMultiple = false)
         {
             if (value == null)
                 return null;
@@ -198,7 +204,17 @@ namespace ACE.Entity.Models
             rwLock.EnterReadLock();
             try
             {
-                var valuesByStatModTypeAndKey = value.Where(e => (e.StatModType & statModType) == statModType && e.StatModKey == statModKey);
+                var multipleStat = EnchantmentTypeFlags.Undef;
+
+                if (handleMultiple)
+                {
+                    if (statModType == EnchantmentTypeFlags.Attribute)
+                        multipleStat = MultiAttribute;
+                    else if (statModType == EnchantmentTypeFlags.Skill)
+                        multipleStat = MultiSkill;
+                }
+
+                var valuesByStatModTypeAndKey = value.Where(e => (e.StatModType & statModType) == statModType && e.StatModKey == statModKey || (handleMultiple && (e.StatModType & multipleStat) == multipleStat && e.StatModKey == 0));
 
                 var results = from e in valuesByStatModTypeAndKey
                     group e by e.SpellCategory
