@@ -647,7 +647,10 @@ namespace ACE.Server.WorldObjects
             // ensure combat stance
             bool specShieldAllowsNoncombat = PropertyManager.GetBool("shields_allow_noncombat_mode_if_specialized").Item;
             bool noncombat = CombatMode == CombatMode.NonCombat;
-            bool isSpec = this.Skills[Skill.Shield].AdvancementClass == SkillAdvancementClass.Specialized;
+
+            var hasShield = this.Skills?.ContainsKey(Skill.Shield);
+            bool isSpec = hasShield == true && this.Skills[Skill.Shield]?.AdvancementClass == SkillAdvancementClass.Specialized;
+
             if (noncombat)
             {
                 if (!specShieldAllowsNoncombat || !isSpec)
@@ -1109,14 +1112,29 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public bool AlertMonster(Creature monster)
         {
-            if ((monster.Attackable || monster.TargetingTactic != TargetingTactic.None) && monster.MonsterState == State.Idle && monster.Tolerance == Tolerance.None)
-            {
-                //Console.WriteLine($"[{Timers.RunningTime}] - {monster.Name} ({monster.Guid}) - waking up");
-                monster.AttackTarget = this;
-                monster.WakeUp();
-                return true;
-            }
-            return false;
+            // non-attackable creatures do not get aggroed,
+            // unless they have a TargetingTactic, such as the invisible archers in Oswald's Dirk Quest
+            if (!monster.Attackable && monster.TargetingTactic == TargetingTactic.None)
+                return false;
+
+            // ensure monster is currently in idle state to wake up,
+            // and it has no tolerance to players running nearby
+            // TODO: investigate usage for tolerance
+            if (monster.MonsterState != State.Idle || monster.Tolerance != Tolerance.None)
+                return false;
+
+            // if monster has faction bits set, ensure player doesn't belong to same faction
+            if (Faction1Bits != null && monster.Faction1Bits != null && (Faction1Bits & monster.Faction1Bits) != 0)
+                return false;
+
+            if (monster.RetaliateTargets != null)
+                monster.RetaliateTargets.Add(Guid.Full);
+
+            //Console.WriteLine($"[{Timers.RunningTime}] - {monster.Name} ({monster.Guid}) - waking up");
+            monster.AttackTarget = this;
+            monster.WakeUp();
+
+            return true;
         }
 
         /// <summary>

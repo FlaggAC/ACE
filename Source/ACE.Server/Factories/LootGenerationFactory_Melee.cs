@@ -357,7 +357,7 @@ namespace ACE.Server.Factories
             }
 
             // Description
-            wo.AppraisalLongDescDecoration = AppraisalLongDescDecorations.PrependWorkmanship | AppraisalLongDescDecorations.AppendGemInfo;
+            //wo.AppraisalLongDescDecoration = AppraisalLongDescDecorations.PrependWorkmanship | AppraisalLongDescDecorations.AppendGemInfo;
             wo.LongDesc = wo.Name;
 
             // GemTypes, Material, Workmanship
@@ -443,7 +443,7 @@ namespace ACE.Server.Factories
         private static double GetVariance(Skill category, LootWeaponType type)
         {
             double variance = 0;
-            int chance = ThreadSafeRandom.Next(0, 100);
+            int chance = ThreadSafeRandom.Next(0, 99);
 
             switch (category)
             {

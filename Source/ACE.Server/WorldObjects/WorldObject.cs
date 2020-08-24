@@ -719,6 +719,8 @@ namespace ACE.Server.WorldObjects
 
         public virtual void OnGeneration(WorldObject generator)
         {
+            //Console.WriteLine($"{Name}.OnGeneration()");
+
             EmoteManager.OnGeneration();
         }
 
@@ -735,6 +737,8 @@ namespace ACE.Server.WorldObjects
 
             if (Generator != null)
                 OnGeneration(Generator);
+
+            //Console.WriteLine($"{Name}.EnterWorld()");
 
             return true;
         }
@@ -843,7 +847,7 @@ namespace ACE.Server.WorldObjects
         {
             if (IsDestroyed)
             {
-                log.WarnFormat("Item 0x{0:X8}:{1} called destroy more than once.", Guid.Full, Name);
+                //log.WarnFormat("Item 0x{0:X8}:{1} called destroy more than once.", Guid.Full, Name);
                 return;
             }
 
@@ -868,6 +872,9 @@ namespace ACE.Server.WorldObjects
 
             if (raiseNotifyOfDestructionEvent)
                 NotifyOfEvent(RegenerationType.Destruction);
+
+            if (IsGenerator)
+                OnGeneratorDestroy();
 
             CurrentLandblock?.RemoveWorldObject(Guid);
 

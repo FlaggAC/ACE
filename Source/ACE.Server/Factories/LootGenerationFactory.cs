@@ -82,6 +82,22 @@ namespace ACE.Server.Factories
                     break;
             }
 
+            // For Society Armor - Only generates 2 pieces of Society Armor.
+            // breaking it out here to Generate Armor
+            if (profile.TreasureType >= 2971 && profile.TreasureType <= 2999)
+            {
+                bool mutateYes = true;
+                numItems = ThreadSafeRandom.Next(profile.MagicItemMinAmount, profile.MagicItemMaxAmount);
+
+                for (var i = 0; i < numItems; i++)
+                {
+                    lootWorldObject = CreateSocietyArmor(profile, mutateYes);
+                    if (lootWorldObject != null)
+                        loot.Add(lootWorldObject);
+                }
+                return loot;
+            }
+
             var itemChance = ThreadSafeRandom.Next(1, 100);
             if (itemChance <= profile.ItemChance)
             {
@@ -169,7 +185,8 @@ namespace ACE.Server.Factories
             // Gems 14%
             // Armor 24%
             // Weapons 30%
-            // Clothing 14%
+            // Clothing 13%
+            // Cloaks 1%
             // Jewelry 18%
 
             switch (type)
@@ -182,9 +199,13 @@ namespace ACE.Server.Factories
                     //armor
                     wo = CreateArmor(profile, isMagical, true, lootBias);
                     return wo;
-                case var rate when (rate > 38 && rate < 53):
+                case var rate when (rate > 38 && rate < 52):
                     // clothing (shirts/pants)
                     wo = CreateArmor(profile, isMagical, false, lootBias);
+                    return wo;
+                case var rate when (rate > 51 && rate < 53):
+                    // Cloaks  
+                    wo = CreateCloak(profile);
                     return wo;
                 case var rate when (rate > 52 && rate < 83):
                     // weapons (Melee/Missile/Casters)
@@ -254,6 +275,8 @@ namespace ACE.Server.Factories
                 MutateMissileWeapon(item, profile, isMagical, wieldDifficulty, isElemental);
             else if (item is PetDevice petDevice)
                 MutatePetDevice(petDevice, profile.Tier);
+            else if (GetMutateCloakData(item.WeenieClassId))
+                MutateCloak(item, profile);
             else
                 return false;
 
@@ -477,7 +500,7 @@ namespace ACE.Server.Factories
                             damageMod = 0;
                             break;
                         case 2:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 80)
                                 damageMod = .01;
                             else if (chance < 95)
@@ -486,7 +509,7 @@ namespace ACE.Server.Factories
                                 damageMod = .03;
                             break;
                         case 3:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .03;
                             else if (chance < 80)
@@ -497,7 +520,7 @@ namespace ACE.Server.Factories
                                 damageMod = .06;
                             break;
                         case 4:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .06;
                             else if (chance < 80)
@@ -508,7 +531,7 @@ namespace ACE.Server.Factories
                                 damageMod = .09;
                             break;
                         case 5:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .09;
                             else if (chance < 80)
@@ -519,7 +542,7 @@ namespace ACE.Server.Factories
                                 damageMod = .12;
                             break;
                         case 6:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .09;
                             else if (chance < 80)
@@ -530,7 +553,7 @@ namespace ACE.Server.Factories
                                 damageMod = .12;
                             break;
                         case 7:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .11;
                             else if (chance < 80)
@@ -539,7 +562,7 @@ namespace ACE.Server.Factories
                                 damageMod = .13;
                             break;
                         case 8:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .13;
                             else if (chance < 80)
@@ -557,7 +580,7 @@ namespace ACE.Server.Factories
                             damageMod = 0;
                             break;
                         case 2:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 80)
                                 damageMod = .01;
                             else if (chance < 95)
@@ -566,7 +589,7 @@ namespace ACE.Server.Factories
                                 damageMod = .03;
                             break;
                         case 3:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .03;
                             else if (chance < 80)
@@ -577,7 +600,7 @@ namespace ACE.Server.Factories
                                 damageMod = .06;
                             break;
                         case 4:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .06;
                             else if (chance < 80)
@@ -588,7 +611,7 @@ namespace ACE.Server.Factories
                                 damageMod = .09;
                             break;
                         case 5:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .09;
                             else if (chance < 80)
@@ -599,7 +622,7 @@ namespace ACE.Server.Factories
                                 damageMod = .12;
                             break;
                         case 6:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .12;
                             else if (chance < 80)
@@ -610,7 +633,7 @@ namespace ACE.Server.Factories
                                 damageMod = .15;
                             break;
                         case 7:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .15;
                             else if (chance < 80)
@@ -619,7 +642,7 @@ namespace ACE.Server.Factories
                                 damageMod = .17;
                             break;
                         case 8:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .16;
                             else if (chance < 80)
@@ -637,7 +660,7 @@ namespace ACE.Server.Factories
                             damageMod = 0;
                             break;
                         case 2:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 80)
                                 damageMod = .01;
                             else if (chance < 95)
@@ -646,7 +669,7 @@ namespace ACE.Server.Factories
                                 damageMod = .03;
                             break;
                         case 3:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .02;
                             else if (chance < 80)
@@ -657,7 +680,7 @@ namespace ACE.Server.Factories
                                 damageMod = .05;
                             break;
                         case 4:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .05;
                             else if (chance < 80)
@@ -668,7 +691,7 @@ namespace ACE.Server.Factories
                                 damageMod = .08;
                             break;
                         case 5:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .07;
                             else if (chance < 80)
@@ -679,7 +702,7 @@ namespace ACE.Server.Factories
                                 damageMod = .10;
                             break;
                         case 6:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .11;
                             else if (chance < 80)
@@ -690,7 +713,7 @@ namespace ACE.Server.Factories
                                 damageMod = .14;
                             break;
                         case 7:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .13;
                             else if (chance < 80)
@@ -701,7 +724,7 @@ namespace ACE.Server.Factories
                                 damageMod = .16;
                             break;
                         case 8:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .17;
                             else if (chance < 80)
@@ -721,7 +744,7 @@ namespace ACE.Server.Factories
                             damageMod = 0;
                             break;
                         case 2:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 80)
                                 damageMod = .01;
                             else if (chance < 95)
@@ -730,7 +753,7 @@ namespace ACE.Server.Factories
                                 damageMod = .03;
                             break;
                         case 3:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .02;
                             else if (chance < 80)
@@ -741,7 +764,7 @@ namespace ACE.Server.Factories
                                 damageMod = .05;
                             break;
                         case 4:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .05;
                             else if (chance < 80)
@@ -752,7 +775,7 @@ namespace ACE.Server.Factories
                                 damageMod = .08;
                             break;
                         case 5:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .07;
                             else if (chance < 80)
@@ -763,7 +786,7 @@ namespace ACE.Server.Factories
                                 damageMod = .10;
                             break;
                         case 6:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .11;
                             else if (chance < 80)
@@ -774,7 +797,7 @@ namespace ACE.Server.Factories
                                 damageMod = .14;
                             break;
                         case 7:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .14;
                             else if (chance < 80)
@@ -785,7 +808,7 @@ namespace ACE.Server.Factories
                                 damageMod = .17;
                             break;
                         case 8:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .18;
                             else if (chance < 80)
@@ -807,7 +830,7 @@ namespace ACE.Server.Factories
                             damageMod = 0;
                             break;
                         case 2:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 80)
                                 damageMod = .01;
                             else if (chance < 70)
@@ -818,7 +841,7 @@ namespace ACE.Server.Factories
                                 damageMod = .04;
                             break;
                         case 3:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .04;
                             else if (chance < 80)
@@ -829,7 +852,7 @@ namespace ACE.Server.Factories
                                 damageMod = .07;
                             break;
                         case 4:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .07;
                             else if (chance < 70)
@@ -842,7 +865,7 @@ namespace ACE.Server.Factories
                                 damageMod = .11;
                             break;
                         case 5:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .11;
                             else if (chance < 70)
@@ -855,7 +878,7 @@ namespace ACE.Server.Factories
                                 damageMod = .15;
                             break;
                         case 6:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .15;
                             else if (chance < 70)
@@ -866,7 +889,7 @@ namespace ACE.Server.Factories
                                 damageMod = .18;
                             break;
                         case 7:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .18;
                             else if (chance < 80)
@@ -877,7 +900,7 @@ namespace ACE.Server.Factories
                                 damageMod = .21;
                             break;
                         case 8:
-                            chance = ThreadSafeRandom.Next(0, 100);
+                            chance = ThreadSafeRandom.Next(0, 99);
                             if (chance < 50)
                                 damageMod = .21;
                             else if (chance < 80)
@@ -908,7 +931,7 @@ namespace ACE.Server.Factories
             return -manaRate;
         }
 
-        private static WorldObject AssignMagic(WorldObject wo, TreasureDeath profile, bool covenantArmor = false)
+        private static WorldObject AssignMagic(WorldObject wo, TreasureDeath profile, bool isArmor = false)
         {
             const int armorSpellImpenIndex = 47; // 47th row in the LootTables.ArmorSpells array, starting from zero
 
@@ -955,12 +978,11 @@ namespace ACE.Server.Factories
             // Magic stats
             int numSpells = GetSpellDistribution(profile, out int minorCantrips, out int majorCantrips, out int epicCantrips, out int legendaryCantrips);
             int numCantrips = minorCantrips + majorCantrips + epicCantrips + legendaryCantrips;
-            int spellcraft = GetSpellcraft(numSpells, profile.Tier);
+            
 
             wo.UiEffects = UiEffects.Magical;
             wo.ManaRate = manaRate;
-            wo.ItemSpellcraft = spellcraft;
-            wo.ItemDifficulty = GetDifficulty(profile.Tier, spellcraft);
+
             wo.ItemMaxMana = GetMaxMana(numSpells, profile.Tier);
             wo.ItemCurMana = wo.ItemMaxMana;
 
@@ -982,8 +1004,8 @@ namespace ACE.Server.Factories
                 }
             }
 
-            // From a discussion on LSD, determined in that if covenant armor includes spells, the armor piece will have at least Impen
-            if (covenantArmor == true)
+            // Per discord discussions: ALL armor/shields if it had any spells, had an Impen spell
+            if (isArmor == true)
             {
                 // Ensure that one of the Impen spells was not already added
                 bool impenFound = false;
@@ -1040,7 +1062,9 @@ namespace ACE.Server.Factories
                     wo.Biota.GetOrAddKnownSpell(spellID, wo.BiotaDatabaseLock, out _);
                 }
             }
-
+            int spellcraft = GetSpellcraft(wo, numSpells, profile.Tier);
+            wo.ItemSpellcraft = spellcraft;
+            wo.ItemDifficulty = GetDifficulty(wo, spellcraft);
             return wo;
         }
 
@@ -1053,96 +1077,37 @@ namespace ACE.Server.Factories
             numEpics = 0;
             numLegendaries = 0;
 
-            int nonCantripChance = ThreadSafeRandom.Next(1, 100);
+            int nonCantripChance = ThreadSafeRandom.Next(1, 100000);
 
             numMinors = GetNumMinorCantrips(profile); // All tiers have a chance for at least one minor cantrip
+            numMajors = GetNumMajorCantrips(profile);
+            numEpics = GetNumEpicCantrips(profile);
+            numLegendaries = GetNumLegendaryCantrips(profile);
 
-            switch (profile.Tier)
-            {
-                case 1:
-                    // 1-3 w/ chance of minor cantrip
-                    if (nonCantripChance <= 50)
-                        numNonCantrips = 1;
-                    else if (nonCantripChance <= 90)
-                        numNonCantrips = 2;
-                    else
-                        numNonCantrips = 3;
-                    break;
+            //  Fixing the absurd amount of spells on items - HQ 6/21/2020
+            //  From Mags Data all tiers have about the same chance for a given number of spells on items.  This is the ratio for magical items.
+            //  1 Spell(s) - 46.410 %
+            //  2 Spell(s) - 27.040 %
+            //  3 Spell(s) - 17.850 %
+            //  4 Spell(s) - 6.875 %
+            //  5 Spell(s) - 1.525 %
+            //  6 Spell(s) - 0.235 %
+            //  7 Spell(s) - 0.065 %
 
-                case 2:
-                    // 3-4 w/ chance of either minor or major
-                    if (nonCantripChance <= 50)
-                        numNonCantrips = 3;
-                    else
-                        numNonCantrips = 4;
-                    break;
-
-                case 3:
-                    // 4-5 w/ chance of either major or minor
-                    if (nonCantripChance <= 50)
-                        numNonCantrips = 4;
-                    else
-                        numNonCantrips = 5;
-
-                    numMajors = GetNumMajorCantrips(profile);
-                    break;
-
-                case 4:
-                    // 5-6, major and minor
-                    if (nonCantripChance <= 50)
-                        numNonCantrips = 5;
-                    else
-                        numNonCantrips = 6;
-
-                    numMajors = GetNumMajorCantrips(profile);
-                    break;
-
-                case 5:
-                    // 5-7 major and minor
-                    if (nonCantripChance <= 50)
-                        numNonCantrips = 5;
-                    else if (nonCantripChance <= 90)
-                        numNonCantrips = 6;
-                    else
-                        numNonCantrips = 7;
-
-                    numMajors = GetNumMajorCantrips(profile);
-                    break;
-
-                case 6:
-                    // 6-7, minor(4 total) major(2 total)
-                    if (nonCantripChance <= 50)
-                        numNonCantrips = 6;
-                    else
-                        numNonCantrips = 7;
-
-                    numMajors = GetNumMajorCantrips(profile);
-                    numEpics = GetNumEpicCantrips(profile);
-                    break;
-
-                case 7:
-                    /// 6-7, minor(4), major(3), epic(4)
-                    if (nonCantripChance <= 50)
-                        numNonCantrips = 6;
-                    else
-                        numNonCantrips = 7;
-
-                    numMajors = GetNumMajorCantrips(profile);
-                    numEpics = GetNumEpicCantrips(profile);
-                    break;
-
-                default:
-                    // 6-7, minor(4), major(3), epic(4), legendary(2)
-                    if (nonCantripChance <= 50)
-                        numNonCantrips = 6;
-                    else
-                        numNonCantrips = 7;
-
-                    numMajors = GetNumMajorCantrips(profile);
-                    numEpics = GetNumEpicCantrips(profile);
-                    numLegendaries = GetNumLegendaryCantrips(profile);
-                    break;
-            }
+            if (nonCantripChance <= 46410)
+                numNonCantrips = 1;
+            else if (nonCantripChance <= 73450)
+                numNonCantrips = 2;
+            else if (nonCantripChance <= 91300)
+                numNonCantrips = 3;
+            else if (nonCantripChance <= 98175)
+                numNonCantrips = 4;
+            else if (nonCantripChance <= 99700)
+                numNonCantrips = 5;
+            else if (nonCantripChance <= 99935)
+                numNonCantrips = 6;
+            else
+                numNonCantrips = 7;
 
             return numNonCantrips + numMinors + numMajors + numEpics + numLegendaries;
         }
@@ -1215,7 +1180,7 @@ namespace ACE.Server.Factories
                     magicMod = 0;
                     break;
                 case 3:
-                    chance = ThreadSafeRandom.Next(0, 1000);
+                    chance = ThreadSafeRandom.Next(1, 1000);
                     if (chance > 900)
                         magicMod = 5;
                     else if (chance > 800)
@@ -1228,7 +1193,7 @@ namespace ACE.Server.Factories
                         magicMod = 1;
                     break;
                 case 4:
-                    chance = ThreadSafeRandom.Next(0, 1000);
+                    chance = ThreadSafeRandom.Next(1, 1000);
                     if (chance > 900)
                         magicMod = 10;
                     else if (chance > 800)
@@ -1243,7 +1208,7 @@ namespace ACE.Server.Factories
                         magicMod = 5;
                     break;
                 case 5:
-                    chance = ThreadSafeRandom.Next(0, 1000);
+                    chance = ThreadSafeRandom.Next(1, 1000);
                     if (chance > 900)
                         magicMod = 10;
                     else if (chance > 800)
@@ -1258,7 +1223,7 @@ namespace ACE.Server.Factories
                         magicMod = 5;
                     break;
                 case 6:
-                    chance = ThreadSafeRandom.Next(0, 1000);
+                    chance = ThreadSafeRandom.Next(1, 1000);
                     if (chance > 900)
                         magicMod = 10;
                     else if (chance > 800)
@@ -1273,7 +1238,7 @@ namespace ACE.Server.Factories
                         magicMod = 5;
                     break;
                 case 7:
-                    chance = ThreadSafeRandom.Next(0, 1000);
+                    chance = ThreadSafeRandom.Next(1, 1000);
                     if (chance > 900)
                         magicMod = 10;
                     else if (chance > 800)
@@ -1288,7 +1253,7 @@ namespace ACE.Server.Factories
                         magicMod = 5;
                     break;
                 default:
-                    chance = ThreadSafeRandom.Next(0, 1000);
+                    chance = ThreadSafeRandom.Next(1, 1000);
                     if (chance > 900)
                         magicMod = 10;
                     else if (chance > 800)
@@ -1459,7 +1424,7 @@ namespace ACE.Server.Factories
         private static int GetWorkmanship(int tier)
         {
             int workmanship = 0;
-            int chance = ThreadSafeRandom.Next(0, 100);
+            int chance = ThreadSafeRandom.Next(0, 99);
 
             switch (tier)
             {
@@ -1546,78 +1511,105 @@ namespace ACE.Server.Factories
             return workmanship;
         }
 
-        private static int GetSpellcraft(int spellAmount, int tier)
+        private static int GetSpellcraft(WorldObject wo, int spellAmount, int tier)
         {
-            int spellcraft = 0;
-            switch (tier)
+
+            float minItemSpellCraftRange = 0.0f;
+            float maxItemSpellCraftRange = 0.0f;
+
+            switch (wo.ItemType)
             {
-                case 1:
-                    spellcraft = ThreadSafeRandom.Next(1, 20) + spellAmount * ThreadSafeRandom.Next(1, 4); //1-50
+                case ItemType.MeleeWeapon:
+                case ItemType.Caster:
+                case ItemType.MissileWeapon:
+                case ItemType.Armor:
+                case ItemType.Clothing:
+                case ItemType.Jewelry:
+                    minItemSpellCraftRange = 0.90f;
+                    maxItemSpellCraftRange = 1.05f;
                     break;
-                case 2:
-                    spellcraft = ThreadSafeRandom.Next(40, 70) + spellAmount * ThreadSafeRandom.Next(1, 5); //40-90
-                    break;
-                case 3:
-                    spellcraft = ThreadSafeRandom.Next(70, 90) + spellAmount * ThreadSafeRandom.Next(1, 6); //80 - 130
-                    break;
-                case 4:
-                    spellcraft = ThreadSafeRandom.Next(100, 120) + spellAmount * ThreadSafeRandom.Next(1, 7); /// 120 - 160
-                    break;
-                case 5:
-                    spellcraft = ThreadSafeRandom.Next(130, 150) + spellAmount * ThreadSafeRandom.Next(1, 8); ///150 - 210
-                    break;
-                case 6:
-                    spellcraft = ThreadSafeRandom.Next(160, 180) + spellAmount * ThreadSafeRandom.Next(1, 9); /// 200-260
-                    break;
-                case 7:
-                    spellcraft = ThreadSafeRandom.Next(230, 260) + spellAmount * ThreadSafeRandom.Next(1, 10); /// 250 - 310
-                    break;
-                case 8:
-                    spellcraft = ThreadSafeRandom.Next(280, 300) + spellAmount * ThreadSafeRandom.Next(1, 11); //300-450
-                    break;
+                case ItemType.Gem:
                 default:
+                    minItemSpellCraftRange = 1.00f;
+                    maxItemSpellCraftRange = 1.00f;
                     break;
             }
 
-            return spellcraft;
-        }
-
-        private static int GetDifficulty(int tier, int spellcraft)
-        {
-            int difficulty = 0;
-            switch (tier)
+            // Getting the spell difficulty
+            var maxSpellLevel = wo.GetMaxSpellLevel();
+            int maxSpellDiff = maxSpellLevel switch
             {
-                case 1:
-                    difficulty = spellcraft + (ThreadSafeRandom.Next(0, 10) * ThreadSafeRandom.Next(1, 3));
-                    break;
-                case 2:
-                    difficulty = spellcraft + (ThreadSafeRandom.Next(0, 10) * ThreadSafeRandom.Next(1, 3));
-                    break;
-                case 3:
-                    difficulty = spellcraft + (ThreadSafeRandom.Next(0, 10) * ThreadSafeRandom.Next(1, 3));
-                    break;
-                case 4:
-                    difficulty = spellcraft + (ThreadSafeRandom.Next(0, 10) * ThreadSafeRandom.Next(1, 3));
-                    break;
-                case 5:
-                    difficulty = spellcraft + (ThreadSafeRandom.Next(0, 10) * ThreadSafeRandom.Next(1, 3));
-                    break;
-                case 6:
-                    difficulty = spellcraft + (ThreadSafeRandom.Next(0, 10) * ThreadSafeRandom.Next(1, 3));
-                    break;
-                case 7:
-                    difficulty = spellcraft + (ThreadSafeRandom.Next(0, 10) * ThreadSafeRandom.Next(1, 3));
-                    break;
-                case 8:
-                    difficulty = spellcraft + (ThreadSafeRandom.Next(0, 10) * ThreadSafeRandom.Next(1, 3));
-                    break;
-                default:
-                    break;
-            }
+                2 => 50,
+                3 => 100,
+                4 => 150,
+                5 => 200,
+                6 => 250,
+                7 => 300,
+                8 => 400,
+                _ => 1
+            };
 
-            return difficulty;
+            var tItemSpellCraft = maxSpellDiff * ThreadSafeRandom.Next(minItemSpellCraftRange, maxItemSpellCraftRange);
+
+            if (tItemSpellCraft < 0)
+                tItemSpellCraft = 0;
+
+            int finalItemSpellCraft = (int)Math.Floor(tItemSpellCraft);
+
+            return finalItemSpellCraft;
+
         }
 
+        private static int GetDifficulty(WorldObject wo, int itemspellcraft)
+        {
+            int wieldReq = 1;
+            int rank_mod = 0;  
+            int num_spells = 1;
+            int epicAddon = 0;
+            int legAddon = 0;
+
+            num_spells = wo.Biota.PropertiesSpellBook.Count();
+
+            if (wo.EpicCantrips.Count > 0)
+                epicAddon = ThreadSafeRandom.Next(1, 5) * wo.EpicCantrips.Count;
+            if (wo.LegendaryCantrips.Count > 0)
+                legAddon = ThreadSafeRandom.Next(5, 10) * wo.LegendaryCantrips.Count;
+
+            if (wo.ItemAllegianceRankLimit.HasValue)
+                rank_mod = wo.ItemAllegianceRankLimit.Value;
+            if (wo.WieldDifficulty.HasValue)
+            {
+                if (wo.WieldDifficulty == 150 || wo.WieldDifficulty == 180)
+                    wieldReq = 1;
+                else
+                    wieldReq = wo.WieldDifficulty.Value;
+            }
+            else
+                wieldReq = 1;
+
+            float heritage_mod = 1.0f;  
+            if (wo.Heritage.HasValue)
+                heritage_mod = 0.75f;
+
+            if (rank_mod == 0)
+                rank_mod = 1;
+
+            // Spell Count Addon
+            float spellAddonChance = num_spells * (20.0f / (num_spells + 2.0f));
+            float spellAddon = ThreadSafeRandom.Next(1.0f, spellAddonChance) * num_spells;
+
+            float tArcane = itemspellcraft * heritage_mod * 1.9f + spellAddon + epicAddon + legAddon;
+            tArcane /= rank_mod + 1.0f;
+            tArcane -= wieldReq / 3.0f;
+
+            if (tArcane < 0)
+                tArcane = 0;
+
+            int fArcane = (int)Math.Floor(tArcane);
+            if (fArcane < 10)
+                fArcane += 10;
+            return fArcane;
+        }
         private static int GetMaxMana(int spellAmount, int tier)
         {
             int maxmana = 0;
@@ -2108,7 +2100,7 @@ namespace ACE.Server.Factories
         /// <summary>
         /// Will return correct meleeMod for Missile/Caster wields (some debate on what 375 top out at, leaving at 18 for now). HarliQ 11/17/19
         /// </summary>
-        private static double GetWieldReqMeleeDMod(int wield)
+        private static double GetWieldReqMeleeDMod(int wield, TreasureDeath profile)
         {
             double meleeMod = 0;
 
@@ -2116,114 +2108,201 @@ namespace ACE.Server.Factories
             switch (wield)
             {
                 case 0:
+                    switch (profile.Tier) // Only Tiers 1-6
+
+                    {
+                        case 0:
+                        case 1:
+                            meleeMod = 0;
+                            break;
+                        case 2:
+                            if (chance <= 20)
+                                meleeMod = 0.01;
+                            else if (chance <= 45)
+                                meleeMod = 0.02;
+                            else if (chance <= 65)
+                                meleeMod = 0.03;
+                            else if (chance <= 85)
+                                meleeMod = 0.04;
+                            else 
+                                meleeMod = 0.05;
+                            break;                          
+                        case 3:
+                            if (chance <= 20)
+                                meleeMod = 0.03;
+                            else if (chance <= 45)
+                                meleeMod = 0.03;
+                            else if (chance <= 65)
+                                meleeMod = 0.04;
+                            else if (chance <= 85)
+                                meleeMod = 0.05;
+                            else if (chance <= 95)
+                                meleeMod = 0.06;
+                            else
+                                meleeMod = 0.07;
+                            break;
+                        case 4:
+                            if (chance <= 20)
+                                meleeMod = 0.04;
+                            else if (chance <= 45)
+                                meleeMod = 0.05;
+                            else if (chance <= 65)
+                                meleeMod = 0.06;
+                            else if (chance <= 85)
+                                meleeMod = 0.07;
+                            else if (chance <= 95)
+                                meleeMod = 0.08;
+                            else
+                                meleeMod = 0.09;
+                            break;
+                        case 5:
+                            if (chance <= 20)
+                                meleeMod = 0.06;
+                            else if (chance <= 45)
+                                meleeMod = 0.07;
+                            else if (chance <= 65)
+                                meleeMod = 0.08;
+                            else if (chance <= 85)
+                                meleeMod = 0.09;
+                            else if (chance <= 95)
+                                meleeMod = 0.10;
+                            else if (chance <= 98)
+                                meleeMod = 0.11;
+                            else
+                                meleeMod = 0.12;
+                            break;
+                        case 6:
+                            if (chance <= 20)
+                                meleeMod = 0.08;
+                            else if (chance <= 20)
+                                meleeMod = 0.09;
+                            else if (chance <= 40)
+                                meleeMod = 0.10;
+                            else if (chance <= 60)
+                                meleeMod = 0.11;
+                            else if (chance <= 75)
+                                meleeMod = 0.12;
+                            else if (chance <= 89)
+                                meleeMod = 0.13;
+                            else if (chance <= 98)
+                                meleeMod = 0.14;
+                            else
+                                meleeMod = 0.15;
+                            break;
+                        default:
+                            meleeMod = 0.05;
+                            break;
+                    }
+                    break;
                 case 250: // Missile
-                    if (chance < 20)
+                    if (chance <= 20)
                         meleeMod = 0.01;
-                    else if (chance < 45)
+                    else if (chance <= 45)
                         meleeMod = 0.02;
-                    else if (chance < 65)
+                    else if (chance <= 65)
                         meleeMod = 0.03;
-                    else if (chance < 85)
+                    else if (chance <= 85)
                         meleeMod = 0.04;
-                    else if (chance < 95)
+                    else if (chance <= 95)
                         meleeMod = 0.05;
                     else
-                        meleeMod = 0.01;
+                        meleeMod = 0.06;
                     break;
                 case 270: // Missile
-                    if (chance < 10)
+                    if (chance <= 10)
+                        meleeMod = 0.04;
+                    else if (chance <= 20)
                         meleeMod = 0.05;
-                    else if (chance < 20)
+                    else if (chance <= 30)
                         meleeMod = 0.06;
-                    else if (chance < 30)
+                    else if (chance <= 45)
                         meleeMod = 0.07;
-                    else if (chance < 45)
+                    else if (chance <= 55)
                         meleeMod = 0.08;
-                    else if (chance < 55)
+                    else if (chance <= 70)
                         meleeMod = 0.09;
-                    else if (chance < 70)
+                    else if (chance <= 85)
                         meleeMod = 0.10;
-                    else if (chance < 85)
+                    else if (chance <= 95)
                         meleeMod = 0.11;
-                    else if (chance < 95)
-                        meleeMod = 0.12;
                     else
-                        meleeMod = 0.05;
+                        meleeMod = 0.12;
                     break;
                 case 310: // Casters
                 case 290: // Missile & Casters
-                    if (chance < 10)
+                    if (chance <= 10)
+                        meleeMod = 0.08;
+                    else if (chance <= 20)
                         meleeMod = 0.09;
-                    else if (chance < 20)
+                    else if (chance <= 40)
                         meleeMod = 0.10;
-                    else if (chance < 40)
+                    else if (chance <= 60)
                         meleeMod = 0.11;
-                    else if (chance < 60)
+                    else if (chance <= 80)
                         meleeMod = 0.12;
-                    else if (chance < 80)
+                    else if (chance <= 95)
                         meleeMod = 0.13;
-                    else if (chance < 95)
-                        meleeMod = 0.14;
                     else
-                        meleeMod = 0.09;
+                        meleeMod = 0.14;
                     break;
                 case 330: // Casters    
                 case 315: // Missile
                 case 335: // Missile
-                    if (chance < 10)
+                    if (chance <= 10)
+                        meleeMod = 0.09;
+                    else if (chance <= 20)
                         meleeMod = 0.10;
-                    else if (chance < 20)
+                    else if (chance <= 40)
                         meleeMod = 0.11;
-                    else if (chance < 40)
+                    else if (chance <= 60)
                         meleeMod = 0.12;
-                    else if (chance < 60)
+                    else if (chance <= 80)
                         meleeMod = 0.13;
-                    else if (chance < 80)
+                    else if (chance <= 95)
                         meleeMod = 0.14;
-                    else if (chance < 95)
-                        meleeMod = 0.15;
                     else
-                        meleeMod = 0.10;
+                        meleeMod = 0.15;
                     break;
                 case 150: // No wield Casters
                 case 355: // Casters
                 case 360: // Missile
-                    if (chance > 95)
-                        meleeMod = 0.18;
-                    else if (chance > 80)
-                        meleeMod = 0.17;
-                    else if (chance > 65)
-                        meleeMod = 0.16;
-                    else if (chance > 45)
-                        meleeMod = 0.15;
-                    else if (chance > 30)
-                        meleeMod = 0.14;
-                    else if (chance > 20)
-                        meleeMod = 0.13;
-                    else
+                    if (chance <= 15)
                         meleeMod = 0.12;
+                    else if (chance <= 30)
+                        meleeMod = 0.13;
+                    else if (chance <= 45)
+                        meleeMod = 0.14;
+                    else if (chance <= 65)
+                        meleeMod = 0.15;
+                    else if (chance <= 80)
+                        meleeMod = 0.16;
+                    else if (chance <= 95)
+                        meleeMod = 0.17;
+                    else
+                        meleeMod = 0.18;
                     break;
                 case 180: // No wield Casters
                 case 375: // Missile/Caster
                 case 385: // Missile/Caster
-                    if (chance > 95)
-                        meleeMod = 0.20;
-                    else if (chance > 85)
-                        meleeMod = 0.19;
-                    else if (chance > 70)
-                        meleeMod = 0.18;
-                    else if (chance > 50)
-                        meleeMod = 0.17;
-                    else if (chance > 35)
-                        meleeMod = 0.16;
-                    else if (chance > 20)
-                        meleeMod = 0.15;
-                    else if (chance > 5)
-                        meleeMod = 0.14;
-                    else
+                    if (chance <= 10)
                         meleeMod = 0.13;
+                    else if (chance <= 25)
+                        meleeMod = 0.14;
+                    else if (chance <= 45)
+                        meleeMod = 0.15;
+                    else if (chance <= 65)
+                        meleeMod = 0.16;
+                    else if (chance <= 80)
+                        meleeMod = 0.17;
+                    else if (chance <= 90)
+                        meleeMod = 0.18;
+                    else if (chance <= 98)
+                        meleeMod = 0.19;
+                    else
+                        meleeMod = 0.20;
                     break;
                 default:
+                    meleeMod = 0.05;
                     break;
             }
             meleeMod += 1.0;
@@ -2285,6 +2364,11 @@ namespace ACE.Server.Factories
                 array[r] = array[i];
                 array[i] = t;
             }
+        }
+        private static WorldObject AssignCloakSpells(WorldObject wo, int cloakSpellId)
+        {
+            wo.ProcSpell = (uint)cloakSpellId;
+            return wo;
         }
     }         
 }

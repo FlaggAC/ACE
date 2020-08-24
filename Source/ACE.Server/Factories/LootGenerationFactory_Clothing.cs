@@ -63,12 +63,85 @@ namespace ACE.Server.Factories
             return wo;
         }
 
-        private static void MutateArmor(WorldObject wo, TreasureDeath profile, bool isMagical, LootTables.ArmorType armorType)
+        private static WorldObject CreateSocietyArmor(TreasureDeath profile, bool mutate)
+        {
+
+            int society = 0;
+            int armortype = 0;
+
+            if (profile.TreasureType >= 2971 && profile.TreasureType <= 2980)
+                society = 0; // CH
+            else if (profile.TreasureType >= 2981 && profile.TreasureType <= 2990)
+                society = 1; // EW
+            else if (profile.TreasureType >= 2991 && profile.TreasureType <= 3000)
+                society = 2; // RB
+
+            switch (profile.TreasureType)
+            {
+                case 2971:
+                case 2981:
+                case 2991:
+                    armortype = 0; // BP
+                    break;
+                case 2972:
+                case 2982:
+                case 2992:
+                    armortype = 1; // Gauntlets
+                    break;
+                case 2973:
+                case 2983:
+                case 2993:
+                    armortype = 2; // Girth
+                    break;
+                case 2974:
+                case 2984:
+                case 2994:
+                    armortype = 3; // Greaves
+                    break;
+                case 2975:
+                case 2985:
+                case 2995:
+                    armortype = 4; // Helm
+                    break;
+                case 2976:
+                case 2986:
+                case 2996:
+                    armortype = 5; // Pauldrons
+                    break;
+                case 2977:
+                case 2987:
+                case 2997:
+                    armortype = 6; // Tassets
+                    break;
+                case 2978:
+                case 2988:
+                case 2998:
+                    armortype = 7; // Vambraces
+                    break;
+                case 2979:
+                case 2989:
+                case 2999:
+                    armortype = 8; // Sollerets
+                    break;
+                default:
+                    break;
+            }
+
+            int societyArmorWeenie = LootTables.SocietyArmorMatrix[armortype][society];
+            WorldObject wo = WorldObjectFactory.CreateNewWorldObject((uint)societyArmorWeenie);
+
+            if (wo != null && mutate)
+            MutateSocietyArmor(wo, profile, true);
+
+            return wo;
+        }
+
+    private static void MutateArmor(WorldObject wo, TreasureDeath profile, bool isMagical, LootTables.ArmorType armorType)
         {
             wo.LongDesc = wo.Name;
 
-            wo.AppraisalItemSkill = 7;
-            wo.AppraisalLongDescDecoration = AppraisalLongDescDecorations.PrependWorkmanship;
+            //wo.AppraisalItemSkill = 7;
+            //wo.AppraisalLongDescDecoration = AppraisalLongDescDecorations.PrependWorkmanship;
 
             int materialType = GetMaterialType(wo, profile.Tier);
             if (materialType > 0)
@@ -89,7 +162,7 @@ namespace ACE.Server.Factories
             wo.Value = value;
 
             int wield;
-            if (profile.Tier >= 6 && armorType != LootTables.ArmorType.CovenantArmor)
+            if (profile.Tier >= 6 && armorType != LootTables.ArmorType.CovenantArmor && armorType != LootTables.ArmorType.OlthoiArmor)
             {
                 wo.WieldRequirements = WieldRequirement.Level;
                 wo.WieldSkillType = (int)Skill.Axe;  // Set by examples from PCAP data
@@ -104,7 +177,7 @@ namespace ACE.Server.Factories
                 wo.WieldDifficulty = wield;
             }
 
-            if (armorType == LootTables.ArmorType.CovenantArmor)
+            if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
             {
                 int chance = ThreadSafeRandom.Next(1, 3);
                 var wieldSkill = chance switch
@@ -133,8 +206,8 @@ namespace ACE.Server.Factories
 
             if (isMagical)
             {
-                bool covenantArmor = false || (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor);
-                wo = AssignMagic(wo, profile, covenantArmor);
+                //bool covenantArmor = false || (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor);
+                wo = AssignMagic(wo, profile, true);
             }
             else
             {
@@ -150,6 +223,52 @@ namespace ACE.Server.Factories
                 MutateBurden(wo, profile.Tier, false);
 
             RandomizeColor(wo);
+        }
+
+
+        private static void MutateSocietyArmor(WorldObject wo, TreasureDeath profile, bool isMagical)
+        {
+            wo.LongDesc = wo.Name;
+
+            int materialType = GetMaterialType(wo, profile.Tier);
+            if (materialType > 0)
+                wo.MaterialType = (MaterialType)materialType;
+
+            int gemCount = ThreadSafeRandom.Next(1, 6);
+            int gemType = ThreadSafeRandom.Next(10, 50);
+
+            wo.GemCount = gemCount;
+            wo.GemType = (MaterialType)gemType;
+
+            int workmanship = GetWorkmanship(profile.Tier);
+            wo.ItemWorkmanship = workmanship;
+
+            double materialMod = LootTables.getMaterialValueModifier(wo);
+            double gemMaterialMod = LootTables.getGemMaterialValueModifier(wo);
+            var value = GetValue(profile.Tier, workmanship, gemMaterialMod, materialMod);
+            wo.Value = value;
+
+            // wo.WieldSkillType = (int)Skill.Axe;  // Set by examples from PCAP data
+
+            if (isMagical)
+            {
+                // looks like society armor always had impen on it
+                wo = AssignMagic(wo, profile, true);
+            }
+            else
+            {
+                wo.ItemManaCost = null;
+                wo.ItemMaxMana = null;
+                wo.ItemCurMana = null;
+                wo.ItemSpellcraft = null;
+                wo.ItemDifficulty = null;
+            }
+            wo = AssignArmorLevel(wo, profile.Tier, LootTables.ArmorType.SocietyArmor);
+
+            // try mutate burden, if MutateFilter exists
+            if (wo.HasMutateFilter(MutateFilter.EncumbranceVal))
+                MutateBurden(wo, profile.Tier, false);
+
         }
 
         private static bool GetMutateArmorData(uint wcid, out LootTables.ArmorType? armorType)
@@ -489,7 +608,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(46, 69);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(90, 130);
 
                             else
@@ -505,7 +624,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(69, 92);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(130, 170);
 
                             else
@@ -521,7 +640,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(92, 115);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(170, 210);
 
                             else
@@ -537,7 +656,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(115, 138);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(210, 250);
 
                             else
@@ -553,7 +672,7 @@ namespace ACE.Server.Factories
                                   || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(138, 161);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(250, 290);
 
                             else
@@ -569,9 +688,11 @@ namespace ACE.Server.Factories
                                 || armorType == LootTables.ArmorType.MiscClothing)
                                 armorModValue = ThreadSafeRandom.Next(161, 184);
 
-                            else if (armorType == LootTables.ArmorType.CovenantArmor)
+                            else if (armorType == LootTables.ArmorType.CovenantArmor || armorType == LootTables.ArmorType.OlthoiArmor)
                                 armorModValue = ThreadSafeRandom.Next(290, 330);
 
+                            else if (armorType == LootTables.ArmorType.SocietyArmor)
+                                armorModValue = ThreadSafeRandom.Next(189, 216);
                             else
                                 armorModValue = ThreadSafeRandom.Next(280, 320);
                             break;
@@ -586,6 +707,159 @@ namespace ACE.Server.Factories
             }
 
             return wo;
+        }
+        private static WorldObject CreateCloak(TreasureDeath profile, bool mutate = true)
+        {
+            int cloakWeenie;
+            int cloakType = ThreadSafeRandom.Next(0, 10);  // 11 different types of Cloaks
+
+            cloakWeenie = LootTables.Cloaks[cloakType];
+
+            WorldObject wo = WorldObjectFactory.CreateNewWorldObject((uint)cloakWeenie);
+
+            if (wo != null && mutate)
+                MutateCloak(wo, profile);
+
+            return wo;
+        }
+        private static void MutateCloak(WorldObject wo, TreasureDeath profile)
+        {
+            const uint cloakIconOverlayOne = 100690996;
+            const uint cloakIconOverlayTwo = 100690997;
+            const uint cloakIconOverlayThree = 100690998;
+            const uint cloakIconOverlayFour = 100690999;
+            const uint cloakIconOverlayFive = 100691000;
+
+            EquipmentSet equipSetId = EquipmentSet.Invalid;
+
+            int cloakSpellId;
+
+            // Workmanship - This really doesn't matter, so not making a big fuss about it.
+            wo.Workmanship = ThreadSafeRandom.Next(1, 10);
+
+            // Value
+            double materialMod = LootTables.getMaterialValueModifier(wo);
+            double gemMaterialMod = LootTables.getGemMaterialValueModifier(wo);
+            wo.Value = GetValue(profile.Tier, (int)wo.Workmanship, gemMaterialMod, materialMod);
+
+            // Level and Icons
+            wo.ItemMaxLevel = GetCloakMaxLevel(profile);
+
+            if (wo.ItemMaxLevel == 1)
+                wo.IconOverlayId = cloakIconOverlayOne;
+            else if (wo.ItemMaxLevel == 2)
+                wo.IconOverlayId = cloakIconOverlayTwo;
+            else if (wo.ItemMaxLevel == 3)
+                wo.IconOverlayId = cloakIconOverlayThree;
+            else if (wo.ItemMaxLevel == 4)
+                wo.IconOverlayId = cloakIconOverlayFour;
+            else if (wo.ItemMaxLevel == 5)
+                wo.IconOverlayId = cloakIconOverlayFive;
+
+            // Wield Diff
+            // Notes - There is a lvl 180 cloak, but that cloak req has Damage Ratings and is T8 only.  Damage ratings on items are done at this time.
+            if (wo.ItemMaxLevel == 1)
+                wo.WieldDifficulty = 30;
+            else if (wo.ItemMaxLevel == 2)
+                wo.WieldDifficulty = 60;
+            else if (wo.ItemMaxLevel == 3)
+                wo.WieldDifficulty = 90;
+            else if (wo.ItemMaxLevel == 4)
+                wo.WieldDifficulty = 120;
+            else if (wo.ItemMaxLevel == 5)
+                wo.WieldDifficulty = 150;
+
+            // Cloak Set - Doing it this way because the Equipment Set Enum has MoA values duplicates (which would slant the ratios/drops to Light,Missile,Heavy and Finesse Spells
+            int cloakSetValue = ThreadSafeRandom.Next(0, 34);  // 35 different types of Cloak Sets
+            int cloakSet = LootTables.CloakSets[cloakSetValue];
+            equipSetId = (EquipmentSet)cloakSet;
+            wo.EquipmentSetId = equipSetId;
+
+            // Surge Spells
+            int spellRoll = ThreadSafeRandom.Next(0, 12);
+            if (spellRoll == 12)
+            {
+                // This is for the one "surge" that is not a spell.  Its a property set for the 
+                wo.CloakWeaveProc = 2;
+            }
+            else
+            {
+                cloakSpellId = LootTables.CloakSpells[spellRoll];
+                AssignCloakSpells(wo, cloakSpellId);               
+                if (cloakSpellId == 5753)  // Cloaked in Skill is the only Self Targeted Spell
+                    wo.ProcSpellSelfTargeted = true;
+                else
+                    wo.ProcSpellSelfTargeted = false;
+                wo.CloakWeaveProc = 1;
+            }
+            
+        }
+        private static int GetCloakMaxLevel(TreasureDeath profile)
+        {
+            //  These Values are just for starting off.  I haven't gotten the numbers yet to confirm these.
+
+            int cloakLevel = 1;
+            int chance = 0;
+
+            chance = ThreadSafeRandom.Next(1, 1000);
+            switch (profile.Tier)
+            {
+                case 1:
+                case 2:
+                default:                
+                    cloakLevel = 1;
+                    break;
+                case 3:
+                case 4:
+                    if (chance <= 440)
+                        cloakLevel = 1;
+                    else
+                        cloakLevel = 2;
+                    break;
+                case 5:
+                    if (chance <= 250)
+                        cloakLevel = 1;
+                    else if (chance <= 700)
+                        cloakLevel = 2;
+                    else
+                        cloakLevel = 3;
+                    break;
+                case 6:
+                    if (chance <= 36)
+                        cloakLevel = 1;
+                    else if (chance <= 357)
+                        cloakLevel = 2;
+                    else if (chance <= 990)
+                        cloakLevel = 3;
+                    else
+                        cloakLevel = 4;
+                    break;
+                case 7:  // From data, no chance to get a lvl 1 cloak
+                    if (chance <= 463)
+                        cloakLevel = 2;
+                    else if (chance <= 945)
+                        cloakLevel = 3;
+                    else if (chance <= 984)
+                        cloakLevel = 4;
+                    else
+                        cloakLevel = 5;
+                    break;
+                case 8:  // From data, no chance to get a lvl 1 cloak
+                    if (chance <= 451)
+                        cloakLevel = 2;
+                    else if (chance <= 920)
+                        cloakLevel = 3;
+                    else if (chance <= 975)
+                        cloakLevel = 4;
+                    else
+                        cloakLevel = 5;
+                    break;
+            }
+            return cloakLevel;
+        }
+        private static bool GetMutateCloakData(uint wcid)
+        {
+            return LootTables.Cloaks.Contains((int)wcid);
         }
     }
 }

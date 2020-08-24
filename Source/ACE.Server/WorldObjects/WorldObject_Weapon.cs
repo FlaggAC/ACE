@@ -4,6 +4,7 @@ using ACE.Common;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Server.Entity;
+using ACE.Server.Managers;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects.Entity;
 using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
@@ -594,14 +595,16 @@ namespace ACE.Server.WorldObjects
             switch (skillType)
             {
                 case ImbuedSkillType.Melee:
-
                     baseMod = Math.Max(0, baseSkill - 100) / 600.0f;
+                    baseMod *= (float)PropertyManager.GetDouble("imbue_critical_strike_melee_scalar").Item;
                     break;
-
                 case ImbuedSkillType.Missile:
-                case ImbuedSkillType.Magic:
-
                     baseMod = Math.Max(0, baseSkill - 60) / 600.0f;
+                    baseMod *= (float)PropertyManager.GetDouble("imbue_critical_strike_missile_scalar").Item;
+                    break;
+                case ImbuedSkillType.Magic:
+                    baseMod = Math.Max(0, baseSkill - 60) / 600.0f;
+                    baseMod *= (float)PropertyManager.GetDouble("imbue_critical_strike_magic_scalar").Item;
                     break;
 
                 default:

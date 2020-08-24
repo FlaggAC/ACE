@@ -284,8 +284,11 @@ namespace ACE.Server.WorldObjects
             if (ItemDifficulty != null)
             {
                 var arcaneLore = player.GetCreatureSkill(Skill.ArcaneLore);
-                if (arcaneLore.Current < ItemDifficulty.Value)
-                    return new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.Your_IsTooLowToUseItemMagic, arcaneLore.Skill.ToSentence()));
+                if (arcaneLore.Current < PropertyManager.GetLong("arcane_lore_bypass_level").Item)
+                {
+                    if (arcaneLore.Current < ItemDifficulty.Value)
+                        return new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.Your_IsTooLowToUseItemMagic, arcaneLore.Skill.ToSentence()));
+                }
             }
 
             // verify skill - does this have to be trained, or only in conjunction with UseRequiresSkillLevel?
