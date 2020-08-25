@@ -1,6 +1,8 @@
+using ACE.DatLoader;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
+using ACE.Server.Entity;
 using ACE.Server.Network.GameMessages.Messages;
 using log4net;
 using System;
@@ -13,10 +15,10 @@ namespace ACE.Server.WorldObjects.Managers
     {
         internal void ExecuteEmoteCustom(PropertiesEmote emoteSet, PropertiesEmoteAction emote, WorldObject targetObject)
         {
+            var player = targetObject as Player;
             switch ((EmoteType)emote.Type)
             {
                 case EmoteType.PotatoResetResistAugs:
-                    var player = targetObject as Player;
                     if (player == null)
                         return;
                     player.SetProperty(PropertyInt.AugmentationResistanceSlash, 0);
@@ -31,6 +33,19 @@ namespace ACE.Server.WorldObjects.Managers
                     player.Session.Network.EnqueueSend(new GameMessageSystemChat(msg, ChatMessageType.Broadcast));
                     msg = $"Note that due to limitations of the game, the displayed augmentations on your character augmentation screen may appear incorrect until a relog.";
                     player.Session.Network.EnqueueSend(new GameMessageSystemChat(msg, ChatMessageType.Broadcast));
+                    break;
+                case EmoteType.PotatoTeachNoobSpells:
+                    var spellTable = DatManager.PortalDat.SpellTable;
+
+                    foreach (var spellID in Player.NoobSpellTable)
+                    {
+                        if (!spellTable.Spells.ContainsKey(spellID))
+                        {
+                            continue;
+                        }
+                        var spell = new Spell(spellID, false);
+                        player.LearnSpellWithNetworking(spell.Id, false);
+                    }
                     break;
                 default:
                     log.Debug($"EmoteManager.Execute - Encountered Unhandled EmoteType {(EmoteType)emote.Type} for {WorldObject.Name} ({WorldObject.WeenieClassId})");

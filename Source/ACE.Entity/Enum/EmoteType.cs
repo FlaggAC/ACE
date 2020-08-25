@@ -131,6 +131,7 @@ namespace ACE.Entity.Enum
 
         // Unknown Id Emotes & Custom Emotes
         Enlightenment                 = 9001,
-        PotatoResetResistAugs         = 2110000
+        PotatoResetResistAugs         = 2110000,
+        PotatoTeachNoobSpells         = 2110001,
     }
 }
