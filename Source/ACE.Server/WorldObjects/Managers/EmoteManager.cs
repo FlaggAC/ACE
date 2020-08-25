@@ -26,7 +26,7 @@ using Spell = ACE.Server.Entity.Spell;
 
 namespace ACE.Server.WorldObjects.Managers
 {
-    public class EmoteManager
+    public partial class EmoteManager
     {
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -1406,7 +1406,8 @@ namespace ACE.Server.WorldObjects.Managers
                     break;
 
                 default:
-                    log.Debug($"EmoteManager.Execute - Encountered Unhandled EmoteType {(EmoteType)emote.Type} for {WorldObject.Name} ({WorldObject.WeenieClassId})");
+                    ExecuteEmoteCustom(emoteSet, emote, targetObject);
+                        
                     break;
             }
 
