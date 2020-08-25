@@ -325,7 +325,7 @@ namespace ACE.Server.WorldObjects
         public void GrantXP(long amount, XpType xpType, ShareType shareType = ShareType.All)
         {
             var modifier = PropertyManager.GetDouble("xp_modifier").Item;
-            var enchantment = EnchantmentManager.GetXPMod();
+            var enchantment = EnchantmentManager.GetXPBonus();
             var items = GetInventoryItemsOfWCID(777777);
             items = items.OrderBy(o => o.Value).ToList();
 
@@ -1080,6 +1080,7 @@ namespace ACE.Server.WorldObjects
         {
             get => GetProperty(PropertyInt64.DelevelXp);
             set { if (!value.HasValue) RemoveProperty(PropertyInt64.DelevelXp); else SetProperty(PropertyInt64.DelevelXp, value.Value); }
+        }
 
         /// <summary>
         /// Returns the multiplier to XP and Luminance from Trinkets and Augmentations
