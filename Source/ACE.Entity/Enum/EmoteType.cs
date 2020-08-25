@@ -130,6 +130,8 @@ namespace ACE.Entity.Enum
         InqContractsFull              = 121,
 
         // Unknown Id Emotes & Custom Emotes
-        Enlightenment                 = 9001
+        Enlightenment                 = 9001,
+        PotatoResetResistAugs         = 2110000,
+        PotatoTeachNoobSpells         = 2110001,
     }
 }
