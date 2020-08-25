@@ -26,7 +26,7 @@ using Spell = ACE.Server.Entity.Spell;
 
 namespace ACE.Server.WorldObjects.Managers
 {
-    public class EmoteManager
+    public partial class EmoteManager
     {
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -788,8 +788,8 @@ namespace ACE.Server.WorldObjects.Managers
 
                 case EmoteType.KillSelf:
 
-                    if (targetCreature != null)
-                        targetCreature.Smite(targetCreature);
+                    if (creature != null)
+                        creature.Smite(creature);
                     break;
 
                 case EmoteType.LocalBroadcast:
@@ -1406,7 +1406,8 @@ namespace ACE.Server.WorldObjects.Managers
                     break;
 
                 default:
-                    log.Debug($"EmoteManager.Execute - Encountered Unhandled EmoteType {(EmoteType)emote.Type} for {WorldObject.Name} ({WorldObject.WeenieClassId})");
+                    ExecuteEmoteCustom(emoteSet, emote, targetObject);
+                        
                     break;
             }
 
@@ -1808,9 +1809,11 @@ namespace ACE.Server.WorldObjects.Managers
             ExecuteEmoteSet(EmoteCategory.ReceiveCritical, null, attacker);
         }
 
-        public void OnDeath(WorldObject lastDamager)
+        public void OnDeath(DamageHistoryInfo lastDamagerInfo)
         {
             IsBusy = false;
+
+            var lastDamager = lastDamagerInfo?.TryGetPetOwnerOrAttacker();
 
             ExecuteEmoteSet(EmoteCategory.Death, null, lastDamager);
         }
