@@ -804,10 +804,7 @@ namespace ACE.Server.Command.Handlers
                     try
                     {
                         var amount = aceParams[1].AsLong;
-                        if (aceParams[0].AsPlayer.PKMode)
-                            aceParams[0].AsPlayer.GrantXP(amount, XpType.PK, ShareType.None);
-                        else
-                            aceParams[0].AsPlayer.GrantXP(amount, XpType.Admin, ShareType.None); 
+                        aceParams[0].AsPlayer.GrantXP(amount, XpType.Admin, ShareType.None); 
 
                         session.Network.EnqueueSend(new GameMessageSystemChat($"{amount:N0} experience granted.", ChatMessageType.Advancement));
 
@@ -1644,6 +1641,7 @@ namespace ACE.Server.Command.Handlers
                 var param = parameters.Length > 0 ? $" {parameters[0]}" : "";
                 session.Network.EnqueueSend(new GameMessageSystemChat($"Couldn't find target{param}", ChatMessageType.Broadcast));
             }
+            
             return target;
         }
 
