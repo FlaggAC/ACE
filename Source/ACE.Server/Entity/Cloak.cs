@@ -37,11 +37,11 @@ namespace ACE.Server.Entity
 
             var itemLevel = cloak.ItemLevel ?? 0;
 
-            var chanceMod = ChanceMod + itemLevel * 0.02f;
+            var maxProcRate = 0.25f + itemLevel * 0.01f;
             if (itemLevel < 1)
-                chanceMod = 0.0f;
+                maxProcRate = 0.0f;
 
-            var chance = damage_percent * chanceMod;
+            var chance = Math.Min(damage_percent, maxProcRate);
 
             if (chance < 1.0f)
             {

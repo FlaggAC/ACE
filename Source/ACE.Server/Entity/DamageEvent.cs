@@ -316,7 +316,7 @@ namespace ACE.Server.Entity
                 ResistanceMod = (float)Math.Max(0.0f, defender.GetResistanceMod(resistanceType, Attacker, Weapon, WeaponResistanceMod));
             }
 
-            // damage resistance rating                       
+            // damage resistance rating
             DamageResistanceRatingMod = Creature.GetNegativeRatingMod(defender.GetDamageResistRating(CombatType));
 
 
