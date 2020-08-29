@@ -362,9 +362,6 @@ namespace ACE.Server.Command.Handlers
                 // skip admins
                 if (player.Account == null || player.Account.AccessLevel == (uint)AccessLevel.Admin)
                     continue;
-                    // Possibly skip enlightened.
-                    //if (player.GetProperty(PropertyInt.Enlightenment) >= 1) 
-                       // continue;
 
                 // player starts with 52 skill credits
                 var startCredits = 52;
@@ -432,14 +429,14 @@ namespace ACE.Server.Command.Handlers
                 var targetCredits = totalCredits - used;
                 var targetMsg = $"{player.Name} should have {targetCredits} available skill credits";
 
-                    if (player.GetProperty(PropertyInt.Enlightenment) >= 1)
-                    {
-                        targetMsg = $"{player.Name} should have {targetCredits} available skill credits. {player.Level} - (ENLIGHTENED)";
-                    }
-                    else
-                    {
-                        targetMsg = $"{player.Name} should have {targetCredits} available skill credits";
-                    }
+                if (player.GetProperty(PropertyInt.Enlightenment) >= 1)
+                {
+                    targetMsg = $"{player.Name} should have {targetCredits} available skill credits. {player.Level} - (ENLIGHTENED)";
+                }
+                else
+                {
+                    targetMsg = $"{player.Name} should have {targetCredits} available skill credits";
+                }
 
                 if (targetCredits < 0)
                 {
@@ -471,7 +468,7 @@ namespace ACE.Server.Command.Handlers
 
                 var availableCredits = player.GetProperty(PropertyInt.AvailableSkillCredits) ?? 0;
 
-                    if (availableCredits != targetCredits && player.GetProperty(PropertyInt.Enlightenment) == 0)
+                if (availableCredits != targetCredits && player.GetProperty(PropertyInt.Enlightenment) == 0)
                 {
                     Console.WriteLine($"{targetMsg}, but they have {availableCredits}{fixStr}");
                     foundIssues = true;

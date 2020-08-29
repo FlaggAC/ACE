@@ -173,11 +173,6 @@ namespace ACE.Server.Network.Managers
                         log.InfoFormat("Login Request from {0} rejected. Server shutting down in less than 2 minutes.", endPoint);
                         SendLoginRequestReject(connectionListener, endPoint, CharacterError.ServerCrash1);
                     }
-                    else if (noport == ConfigManager.Config.Server.Network.BannedIP || noport == ConfigManager.Config.Server.Network.BannedIP2 || noport == ConfigManager.Config.Server.Network.BannedIP3 || noport == ConfigManager.Config.Server.Network.BannedIP4)
-                    {
-                        log.InfoFormat("Login Request from {0} rejected. BANNED IP", endPoint);
-                        SendLoginRequestReject(connectionListener, endPoint, CharacterError.EnterGamePlayerAccountMissing);
-                    }
                     else
                     {
                         log.DebugFormat("Login Request from {0}", endPoint);

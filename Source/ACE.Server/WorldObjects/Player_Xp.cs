@@ -350,45 +350,37 @@ namespace ACE.Server.WorldObjects
                     // reduces xp gained from bottle while enlightened.
                     if (Enlightenment == 1)
                     {
-                        amount = (long)Math.Round(amount / enchantment / 1.5);
+                        amount = (long)Math.Round((amount * (1 + enchantment) / 1.5));
                     }
                     else if (Enlightenment == 2)
                     {
-                        amount = (long)Math.Round(amount / enchantment / 2.5);
+                        amount = (long)Math.Round((amount * (1 + enchantment) / 2.5));
                     }
                     else if (Enlightenment == 3)
                     {
-                        amount = (long)Math.Round(amount / enchantment / 3.5);
+                        amount = (long)Math.Round((amount * (1 + enchantment) / 3.5));
                     }
                     else if (Enlightenment == 4)
                     {
-                        amount = (long)Math.Round(amount / enchantment / 4.5);
+                        amount = (long)Math.Round((amount * (1 + enchantment) / 4.5));
                     }
                     else if (Enlightenment == 5)
                     {
-                        amount = (long)Math.Round(amount / enchantment / 5.5);
+                        amount = (long)Math.Round((amount * (1 + enchantment) / 5.5));
                     }
                     else if (Enlightenment == 6)
                     {
-                        amount = (long)Math.Round(amount / enchantment / 6.5);
+                        amount = (long)Math.Round((amount * (1 + enchantment) / 6.5));
                     }
                     else if (Enlightenment == 7)
                     {
-                        amount = (long)Math.Round(amount / enchantment / 7.5);
+                        amount = (long)Math.Round((amount * (1 + enchantment) / 7.5));
                     }
                     else if (Enlightenment >= 8)
                     {
-                        amount = (long)Math.Round(amount / enchantment / 8.5);
+                        amount = (long)Math.Round((amount * (1 + enchantment) / 8.5));
                     }
-
-                    if (PKMode)
-                    {
-                        amount = 0;
-                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Well that was silly, you use your xp bottle but gained nothing because you are in PKMode.", ChatMessageType.Broadcast));
-                        return;
-                    }
-                    else
-                        UpdateXpAndLevel(amount, xpType);
+                    UpdateXpAndLevel(amount, xpType);
 
                     foreach (var item in items)
                     {
